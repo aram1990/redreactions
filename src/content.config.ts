@@ -5,7 +5,7 @@ import { z } from 'astro/zod';
 const articles = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/articles' }),
   schema: z.object({
-    title: z.string(), slug: z.string().optional(), description: z.string(), author: z.string().default('Red Reactions'),
+    title: z.string(), slug: z.string().optional(), description: z.string(), author: z.string().default('Aram Anwar'),
     publishedAt: z.coerce.date(), updatedAt: z.coerce.date().optional(), heroImage: z.string(), heroImageAlt: z.string(), heroImageCaption: z.string().optional(), heroImageCredit: z.string().optional(),
     contentType: z.enum(['news', 'review', 'reaction', 'lore', 'trailer', 'feature']),
     topics: z.array(z.enum(['movies', 'tv', 'anime', 'comics', 'gaming'])).min(1), franchise: z.string().optional(), tags: z.array(z.string()).default([]),

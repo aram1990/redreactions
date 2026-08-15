@@ -3,7 +3,7 @@ export const site = {
   url: 'https://redreactions.com',
   tagline: 'Movies. TV. Anime. Comics. No Filter.',
   description: 'Bold, independent commentary on movies, TV, anime, comics and gaming.',
-  defaultAuthor: 'Red Reactions',
+  defaultAuthor: 'Aram Anwar',
   contactEmail: 'real.redreactions@gmail.com',
   adsenseClient: import.meta.env.PUBLIC_ADSENSE_CLIENT || '',
   defaultImage: '/images/articles/spider-man-brand-new-day-box-office.webp',

@@ -15,12 +15,18 @@ const url = new URL(articlePath(article), site.url).href;
 const review = d.contentType === 'review';
 const formatDate = (date: Date) => date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 const wasUpdated = Boolean(d.updatedAt && d.updatedAt.toDateString() !== d.publishedAt.toDateString());
+const publisher = {
+  '@type': 'Organization', name: 'Red Reactions', url: site.url,
+  logo: { '@type': 'ImageObject', url: new URL('/favicon.svg', site.url).href },
+};
 const jsonLd = {
-  '@context': 'https://schema.org', '@type': review ? 'Review' : d.contentType === 'news' ? 'NewsArticle' : 'Article',
-  headline: d.title, description: d.description, datePublished: d.publishedAt.toISOString(), dateModified: (d.updatedAt || d.publishedAt).toISOString(),
-  author: { '@type': 'Person', name: d.author }, image: new URL(d.heroImage, site.url).href, mainEntityOfPage: url,
-  ...(review && d.rating ? { reviewRating: { '@type': 'Rating', ratingValue: d.rating, bestRating: 10 } } : {}),
-  ...(d.youtubeId ? { video: { '@type': 'VideoObject', name: d.title, embedUrl: `https://www.youtube-nocookie.com/embed/${d.youtubeId}` } } : {}),
+  '@context': 'https://schema.org', '@graph': [publisher, {
+    '@type': d.contentType === 'news' ? 'NewsArticle' : 'Article',
+    headline: d.title, description: d.description, datePublished: d.publishedAt.toISOString(), dateModified: (d.updatedAt || d.publishedAt).toISOString(),
+    author: { '@type': 'Person', name: d.author }, publisher, image: new URL(d.heroImage, site.url).href,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    ...(d.youtubeId ? { video: { '@type': 'VideoObject', name: d.title, embedUrl: `https://www.youtube-nocookie.com/embed/${d.youtubeId}` } } : {}),
+  }],
 };
 ---
 <BaseLayout title={d.seoTitle || `${d.title} | ${site.name}`} description={d.seoDescription || d.description} image={d.heroImage} jsonLd={jsonLd}>
