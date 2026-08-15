@@ -1,0 +1,5 @@
+---
+import CategoryLayout from '../../layouts/CategoryLayout.astro'; import { getPublishedArticles } from '../../lib/articles';
+export async function getStaticPaths(){const all=await getPublishedArticles();const names=[...new Set(all.map(a=>a.data.franchise).filter(Boolean) as string[])];return names.map(franchise=>({params:{franchise:franchise.toLowerCase().replaceAll(' ','-')},props:{franchise,articles:all.filter(a=>a.data.franchise===franchise)}}));} const {franchise,articles}=Astro.props;
+---
+<CategoryLayout title={franchise} description={`News, reviews, reactions and lore from the ${franchise} universe.`} {articles} />

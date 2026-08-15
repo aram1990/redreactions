@@ -1,0 +1,4 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro'; import { site } from '../config/site';
+---
+<BaseLayout title="Contact | Red Reactions" description="Contact Red Reactions."><section class="wrap max-w-3xl py-12"><p class="eyebrow">Contact</p><h1 class="display mt-2 text-5xl">Start a conversation</h1><div class="mt-8 grid gap-4 sm:grid-cols-2">{[['General contact',site.contactEmail],['Editorial inquiries','editorial@redreactions.com'],['Corrections','corrections@redreactions.com'],['Copyright / takedowns','copyright@redreactions.com'],['Business inquiries','business@redreactions.com']].map(([label,email])=><a class="card p-5" href={`mailto:${email}`}><span class="eyebrow">{label}</span><b class="mt-2 block">{email}</b></a>)}</div><p class="mt-6 text-sm text-muted">TODO for owner: replace placeholder addresses with monitored inboxes before launch. This site intentionally has no backend contact form.</p></section></BaseLayout>

@@ -1,0 +1,10 @@
+---
+import { site } from '../../config/site';
+interface Props { title?: string; description?: string; image?: string; noindex?: boolean; type?: 'website'|'article'; jsonLd?: Record<string, unknown>; }
+const { title = site.name, description = site.description, image = site.defaultImage, noindex = false, type = 'website', jsonLd } = Astro.props;
+const canonical = new URL(Astro.url.pathname, site.url).href;
+const imageUrl = new URL(image, site.url).href;
+---
+<title>{title}</title><meta name="description" content={description} /><link rel="canonical" href={canonical} />
+<meta name="robots" content={noindex ? 'noindex,nofollow' : 'index,follow'} /><meta property="og:type" content={type} /><meta property="og:site_name" content={site.name} /><meta property="og:title" content={title} /><meta property="og:description" content={description} /><meta property="og:url" content={canonical} /><meta property="og:image" content={imageUrl} /><meta name="twitter:card" content="summary_large_image" /><meta name="twitter:title" content={title} /><meta name="twitter:description" content={description} /><meta name="twitter:image" content={imageUrl} />
+{jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}

@@ -1,0 +1,4 @@
+---
+interface Props { title: string; href?: string; label?: string; } const {title, href, label = 'View all'} = Astro.props;
+---
+<div class="mb-5 flex items-end justify-between border-b border-line pb-3"><h2 class="display text-3xl sm:text-4xl">{title}</h2>{href && <a class="text-xs font-bold uppercase tracking-wider text-red" href={href}>{label} →</a>}</div>

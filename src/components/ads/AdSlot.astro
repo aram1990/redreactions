@@ -1,0 +1,4 @@
+---
+import { site } from '../../config/site'; interface Props { placement: 'ARTICLE_TOP'|'ARTICLE_MIDDLE'|'ARTICLE_BOTTOM'|'SIDEBAR'|'HOMEPAGE_FEED'; } const { placement } = Astro.props;
+---
+{site.adsenseClient && <aside class="my-8 border border-line bg-panel p-3 text-center text-[.62rem] uppercase tracking-widest text-muted" aria-label="Advertisement">Advertisement <ins class="adsbygoogle" data-ad-client={site.adsenseClient} data-ad-slot={placement}></ins></aside>}

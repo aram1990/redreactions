@@ -1,0 +1,55 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import type { Article } from '../lib/articles';
+import { articlePath, readingTime, tagSlug } from '../lib/articles';
+import ArticleCard from '../components/cards/ArticleCard.astro';
+import YouTube from '../components/video/YouTube.astro';
+import RedScore from '../components/review/RedScore.astro';
+import AdSlot from '../components/ads/AdSlot.astro';
+import { site } from '../config/site';
+
+interface Props { article: Article; headings: { depth:number; slug:string; text:string }[]; related: Article[]; previous?: Article; next?: Article; }
+const { article, headings, related, previous, next } = Astro.props;
+const d = article.data;
+const url = new URL(articlePath(article), site.url).href;
+const review = d.contentType === 'review';
+const formatDate = (date: Date) => date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+const wasUpdated = Boolean(d.updatedAt && d.updatedAt.toDateString() !== d.publishedAt.toDateString());
+const jsonLd = {
+  '@context': 'https://schema.org', '@type': review ? 'Review' : d.contentType === 'news' ? 'NewsArticle' : 'Article',
+  headline: d.title, description: d.description, datePublished: d.publishedAt.toISOString(), dateModified: (d.updatedAt || d.publishedAt).toISOString(),
+  author: { '@type': 'Person', name: d.author }, image: new URL(d.heroImage, site.url).href, mainEntityOfPage: url,
+  ...(review && d.rating ? { reviewRating: { '@type': 'Rating', ratingValue: d.rating, bestRating: 10 } } : {}),
+  ...(d.youtubeId ? { video: { '@type': 'VideoObject', name: d.title, embedUrl: `https://www.youtube-nocookie.com/embed/${d.youtubeId}` } } : {}),
+};
+---
+<BaseLayout title={d.seoTitle || `${d.title} | ${site.name}`} description={d.seoDescription || d.description} image={d.heroImage} jsonLd={jsonLd}>
+  <article class="wrap py-8 md:py-12">
+    <nav class="mb-5 text-xs text-muted" aria-label="Breadcrumb"><a href="/">Home</a> / <a href={`/${d.topics[0]!}/`}>{d.topics[0]}</a> / <span>{d.contentType}</span></nav>
+    <header class="mx-auto max-w-4xl">
+      <p class="eyebrow">{d.contentType} · {d.topics.join(' / ')}</p>
+      <h1 class="display mt-3 text-4xl leading-none sm:text-6xl">{d.title}</h1>
+      <p class="mt-5 max-w-3xl text-lg leading-relaxed text-muted">{d.description}</p>
+      <div class="mt-6 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted"><span>By <b class="text-paper">{d.author}</b></span><time datetime={d.publishedAt.toISOString()}>Published {formatDate(d.publishedAt)}</time>{wasUpdated && d.updatedAt && <time datetime={d.updatedAt.toISOString()}>Updated {formatDate(d.updatedAt)}</time>}<span>{readingTime(article.body || '')} min read</span></div>
+    </header>
+    <figure class:list={["my-8 overflow-hidden border border-line bg-panel", d.compactHero && 'article-hero--compact']}><img class="article-hero-image aspect-video w-full object-cover" src={d.heroImage} alt={d.heroImageAlt} width="1600" height="900" /><figcaption class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-3 py-2 text-xs text-muted"><span>{d.heroImageCaption || d.heroImageAlt}</span>{d.heroImageCredit && <span>{d.heroImageCredit}</span>}</figcaption></figure>
+    {d.spoilers && <aside class="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"><b>Spoiler warning:</b> this article discusses story details.</aside>}
+    <AdSlot placement="ARTICLE_TOP" />
+    <div class="grid gap-10 lg:grid-cols-[minmax(0,720px)_220px] lg:justify-center">
+      <div>
+        {review && d.rating && <RedScore score={d.rating} />}
+        {d.youtubeId && !d.youtubeInline && <YouTube id={d.youtubeId} title={d.youtubeTitle || d.title} />}
+        <div class="prose"><slot /></div>
+        <AdSlot placement="ARTICLE_MIDDLE" />
+        {d.sources.length > 0 && <section class="mt-10 border-t border-line pt-6"><h2 class="display text-2xl">Sources</h2><ul class="mt-3 space-y-2 text-sm text-muted">{d.sources.map(s => <li><a class="text-red underline" href={s.url} target="_blank" rel="noopener noreferrer">{s.name}</a>{s.publishedAt && ` — ${formatDate(s.publishedAt)}`}</li>)}</ul></section>}
+        <div class="mt-8 flex flex-wrap gap-2">{d.tags.map(t => <a class="rounded-sm border border-line bg-panel px-2.5 py-1 text-xs text-paper transition hover:border-red hover:bg-red hover:text-white focus:border-red focus:bg-red focus:text-white" href={`/tag/${tagSlug(t)}/`}>#{t}</a>)}{d.franchise && <a class="rounded-sm border border-red/60 px-2.5 py-1 text-xs text-red transition hover:bg-red hover:text-white" href={`/franchise/${d.franchise.toLowerCase().replaceAll(' ','-')}/`}>{d.franchise}</a>}</div>
+        <AdSlot placement="ARTICLE_BOTTOM" />
+      </div>
+      <aside class="lg:sticky lg:top-24 lg:h-fit">{headings.length > 1 && <nav class="border-l border-line pl-4" aria-label="Table of contents"><p class="eyebrow mb-3">In this story</p>{headings.filter(h => h.depth === 2).map(h => <a class="mb-2 block text-sm text-muted" href={`#${h.slug}`}>{h.text}</a>)}</nav>}<div class="mt-8"><p class="eyebrow mb-2">Share</p><div class="flex gap-3 text-xs"><a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}`} target="_blank" rel="noopener noreferrer">X</a><a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`} target="_blank" rel="noopener noreferrer">Facebook</a><a href={`https://www.reddit.com/submit?url=${encodeURIComponent(url)}`} target="_blank" rel="noopener noreferrer">Reddit</a><button class="cursor-pointer border-0 bg-transparent p-0 text-red" data-copy-link={url}>Copy link</button></div></div></aside>
+    </div>
+    <section class="mx-auto mt-16 max-w-5xl"><h2 class="display mb-5 text-3xl">Related coverage</h2><div class="grid gap-4 md:grid-cols-2">{related.map(a => <ArticleCard article={a} />)}</div></section>
+    <section class="mx-auto mt-10 grid max-w-5xl gap-4 border-t border-line pt-6 sm:grid-cols-2">{previous && <a class="card p-4 text-sm" href={articlePath(previous)}><span class="eyebrow">Previous</span><b class="mt-2 block">{previous.data.title}</b></a>}{next && <a class="card p-4 text-right text-sm" href={articlePath(next)}><span class="eyebrow">Next</span><b class="mt-2 block">{next.data.title}</b></a>}</section>
+    <section class="mx-auto mt-10 max-w-5xl border-t border-line pt-6"><p class="eyebrow">About the author</p><h2 class="display mt-2 text-2xl">{d.author}</h2><p class="mt-2 max-w-xl text-sm text-muted">Independent commentary and editorial analysis from the Red Reactions team.</p></section>
+  </article>
+  <script>document.querySelector('[data-copy-link]')?.addEventListener('click', async (event) => { const el = event.currentTarget as HTMLButtonElement; await navigator.clipboard?.writeText(el.dataset.copyLink || ''); el.textContent = 'Copied'; });</script>
+</BaseLayout>

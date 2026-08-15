@@ -1,0 +1,7 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getPublishedArticles, articlePath } from '../lib/articles';
+const articles = await getPublishedArticles();
+const popular = articles.filter(a => a.data.trending).slice(0, 3);
+---
+<BaseLayout title="Page Not Found | Red Reactions" description="The page could not be found." noindex><section class="wrap py-24 text-center"><p class="eyebrow">404</p><h1 class="display mt-3 text-6xl">Page not found</h1><p class="mx-auto mt-4 max-w-md text-muted">That story appears to have vanished into the multiverse.</p><div class="mt-8 flex justify-center gap-3"><a class="bg-red px-5 py-3 text-sm font-bold uppercase text-white hover:bg-[#c90711] hover:text-white" href="/">Go home</a><a class="border border-line px-5 py-3 text-sm font-bold uppercase hover:border-red" href="/search/">Search</a></div>{popular.length > 0 && <div class="mx-auto mt-14 max-w-xl text-left"><p class="eyebrow">Popular coverage</p>{popular.map(a => <a class="mt-3 block border-b border-line pb-3 font-bold" href={articlePath(a)}>{a.data.title}</a>)}</div>}</section></BaseLayout>

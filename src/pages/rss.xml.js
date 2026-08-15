@@ -1,0 +1,2 @@
+import rss from '@astrojs/rss'; import { getPublishedArticles, articlePath } from '../lib/articles'; import { site } from '../config/site';
+export async function GET(context) { const articles=await getPublishedArticles(); return rss({title:site.name,description:site.description,site:context.site,items:articles.map(a=>({title:a.data.title,description:a.data.description,pubDate:a.data.publishedAt,link:articlePath(a)}))}); }

@@ -1,0 +1,16 @@
+export const site = {
+  name: 'RED REACTIONS',
+  url: 'https://redreactions.com',
+  tagline: 'Movies. TV. Anime. Comics. No Filter.',
+  description: 'Bold, independent commentary on movies, TV, anime, comics and gaming.',
+  defaultAuthor: 'Red Reactions',
+  contactEmail: 'hello@redreactions.com',
+  adsenseClient: import.meta.env.PUBLIC_ADSENSE_CLIENT || '',
+  defaultImage: '/images/articles/spider-man-brand-new-day-box-office.webp',
+  social: { youtube: '#', tiktok: '#', instagram: '#', facebook: '#', twitch: '#', kick: '#', x: '#' },
+} as const;
+
+export const navItems = [
+  ['Movies', '/movies/'], ['TV & Streaming', '/tv/'], ['Anime', '/anime/'], ['Comics', '/comics/'], ['Gaming', '/gaming/'],
+  ['Trailers', '/trailers/'], ['News', '/news/'], ['Reviews', '/reviews/'], ['Reactions', '/reactions/'], ['Lore', '/lore/'],
+] as const;

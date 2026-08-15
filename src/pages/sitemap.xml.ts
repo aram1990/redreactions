@@ -1,0 +1,5 @@
+import type { APIRoute } from 'astro';
+import { getPublishedArticles, articlePath } from '../lib/articles';
+import { site } from '../config/site';
+const staticPaths = ['/', '/movies/', '/tv/', '/anime/', '/comics/', '/gaming/', '/trailers/', '/news/', '/reviews/', '/reactions/', '/lore/', '/about/', '/contact/', '/privacy/', '/cookies/', '/terms/', '/editorial-policy/', '/copyright/', '/search/'];
+export const GET: APIRoute = async () => { const articles=await getPublishedArticles(); const urls: { path: string; lastmod?: string }[]=[...staticPaths.map(path=>({path})),...articles.map(article=>({path:articlePath(article),lastmod:(article.data.updatedAt || article.data.publishedAt).toISOString()}))]; const body=`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map(({path,lastmod})=>`<url><loc>${new URL(path,site.url).href}</loc>${lastmod?`<lastmod>${lastmod}</lastmod>`:''}</url>`).join('')}</urlset>`; return new Response(body,{headers:{'Content-Type':'application/xml'}}); };

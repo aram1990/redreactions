@@ -1,0 +1,5 @@
+---
+import BaseLayout from './BaseLayout.astro'; import ArticleCard from '../components/cards/ArticleCard.astro'; import SectionHeading from '../components/ui/SectionHeading.astro'; import type { Article } from '../lib/articles';
+interface Props { title:string; description:string; articles:Article[]; } const {title,description,articles}=Astro.props; const [lead,...rest]=articles;
+---
+<BaseLayout title={`${title} | Red Reactions`} description={description}><section class="wrap py-10"><p class="eyebrow">Coverage</p><h1 class="display mt-2 text-5xl sm:text-6xl">{title}</h1><p class="mt-4 max-w-2xl text-muted">{description}</p></section><section class="wrap"><SectionHeading title="Featured" />{lead ? <ArticleCard article={lead} variant="hero" /> : <p class="text-muted">No published articles in this section yet.</p>}</section><section class="wrap py-10"><SectionHeading title="Latest" /><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{rest.map(a=><ArticleCard article={a} />)}</div></section></BaseLayout>
