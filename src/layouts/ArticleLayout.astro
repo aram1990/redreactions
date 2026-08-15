@@ -17,7 +17,7 @@ const formatDate = (date: Date) => date.toLocaleDateString('en-US', { month: 'lo
 const wasUpdated = Boolean(d.updatedAt && d.updatedAt.toDateString() !== d.publishedAt.toDateString());
 const publisher = {
   '@type': 'Organization', name: 'Red Reactions', url: site.url,
-  logo: { '@type': 'ImageObject', url: new URL('/favicon.svg', site.url).href },
+  logo: { '@type': 'ImageObject', url: new URL('/images/Logo/redreactionslogo.jpg', site.url).href },
 };
 const jsonLd = {
   '@context': 'https://schema.org', '@graph': [publisher, {
