@@ -4,7 +4,7 @@ export const site = {
   tagline: 'Movies. TV. Anime. Comics. No Filter.',
   description: 'Bold, independent commentary on movies, TV, anime, comics and gaming.',
   defaultAuthor: 'Red Reactions',
-  contactEmail: 'hello@redreactions.com',
+  contactEmail: 'real.redreactions@gmail.com',
   adsenseClient: import.meta.env.PUBLIC_ADSENSE_CLIENT || '',
   defaultImage: '/images/articles/spider-man-brand-new-day-box-office.webp',
   social: { youtube: '#', tiktok: '#', instagram: '#', facebook: '#', twitch: '#', kick: '#', x: '#' },

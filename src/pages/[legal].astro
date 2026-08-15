@@ -1,6 +1,118 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-const documents={privacy:{title:'Privacy Policy',intro:'This template explains the information practices that the owner must complete before launch.'},cookies:{title:'Cookie Policy',intro:'This template should be completed after the site owner selects a consent platform and advertising configuration.'},terms:{title:'Terms of Use',intro:'This template sets out terms that need owner and jurisdiction-specific review before launch.'},'editorial-policy':{title:'Editorial Policy',intro:'Red Reactions aims for original commentary, transparent corrections, independent reviews, clear source attribution, and human editorial review of any AI-assisted work.'},copyright:{title:'Copyright & Takedown Policy',intro:'This template describes an owner-configured process for copyright queries and takedown requests.'}} as const;
-export async function getStaticPaths(){return ['privacy','cookies','terms','editorial-policy','copyright'].map(legal=>({params:{legal}}));} const legal=Astro.params.legal as keyof typeof documents; const doc=documents[legal];
+import { site } from '../config/site';
+
+const documents = {
+  privacy: { title: 'Privacy Policy', description: 'How Red Reactions handles personal information and third-party services.' },
+  cookies: { title: 'Cookie Policy', description: 'How Red Reactions and its service providers use cookies and similar technologies.' },
+  terms: { title: 'Terms of Use', description: 'Terms for using the Red Reactions website.' },
+  'editorial-policy': { title: 'Editorial Policy', description: 'The editorial standards behind Red Reactions coverage.' },
+  copyright: { title: 'Copyright & Takedown Policy', description: 'How to raise copyright concerns with Red Reactions.' },
+} as const;
+
+export async function getStaticPaths() {
+  return ['privacy', 'cookies', 'terms', 'editorial-policy', 'copyright'].map((legal) => ({ params: { legal } }));
+}
+
+const legal = Astro.params.legal as keyof typeof documents;
+const doc = documents[legal];
+const disableAds = legal === 'privacy' || legal === 'cookies';
 ---
-<BaseLayout title={`${doc.title} | Red Reactions`} description={doc.intro}><section class="wrap max-w-3xl py-12"><p class="eyebrow">Legal & editorial</p><h1 class="display mt-2 text-5xl">{doc.title}</h1><div class="prose mt-8"><p>{doc.intro}</p><h2>Before publication</h2><p><strong>TODO for owner:</strong> add the legal entity (if any), jurisdiction, effective date, contact details, exact data processors, analytics, advertising vendors, retention periods and rights process. Obtain qualified legal review where appropriate.</p><h2>Our approach</h2><p>Red Reactions covers culture through news, criticism, commentary and analysis. It does not host or distribute full copyrighted films, episodes, comics, manga, trailers, or downloads.</p><h2>Contact</h2><p>For policy questions, use the contact details shown on the Contact page after they have been configured by the site owner.</p></div></section></BaseLayout>
+
+<BaseLayout title={`${doc.title} | Red Reactions`} description={doc.description} {disableAds}>
+  <section class="wrap max-w-3xl py-12">
+    <p class="eyebrow">Legal & editorial</p>
+    <h1 class="display mt-2 text-5xl">{doc.title}</h1>
+
+    {legal === 'privacy' && <div class="prose mt-8">
+      <p><strong>Last updated: August 15, 2026</strong></p>
+      <p>This Privacy Policy explains how Red Reactions handles information in connection with <a href={site.url}>redreactions.com</a>. Red Reactions operates this website; no registered legal entity is represented by this policy.</p>
+      <h2>Contact</h2>
+      <p>For privacy questions or requests, email <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>.</p>
+      <h2>Information you provide</h2>
+      <p>If you email Red Reactions, we receive the information included in your message, such as your email address and the details you choose to provide. We use it to respond to and manage the correspondence.</p>
+      <h2>Technical information</h2>
+      <p>When you visit the site, technical information may be processed automatically, including your IP address, browser and device information, request and security logs, and cookie or local-storage identifiers where applicable.</p>
+      <h2>Cloudflare</h2>
+      <p>Cloudflare Pages provides hosting, network delivery and security infrastructure for this website. Cloudflare may process technical request data needed to deliver and protect the site.</p>
+      <h2>Google AdSense and advertising</h2>
+      <p>Red Reactions uses Google AdSense. Google and advertising partners may use cookies or similar technologies for advertising, measurement, fraud prevention and, where permitted, personalization. Third-party vendors, including Google, may use cookies to serve ads based on visits to this and/or other websites. Google provides advertising and privacy controls through its own services and account settings.</p>
+      <h2>Consent choices</h2>
+      <p>Visitors in regions where consent is required are shown Google’s consent-management message. They can consent, refuse consent or manage their choices through that interface.</p>
+      <h2>YouTube embeds</h2>
+      <p>Some articles include embedded YouTube videos. The site uses youtube-nocookie.com privacy-enhanced embeds. External content may still communicate with YouTube or Google when it is loaded or interacted with.</p>
+      <h2>Why information is used</h2>
+      <p>Information may be used to operate and secure the website, respond to correspondence, provide advertising, measure and maintain advertising where applicable, and comply with legal obligations.</p>
+      <h2>Legal grounds</h2>
+      <p>Depending on applicable law and the context, processing may be based on consent where required, legitimate interests where applicable, responding to user requests, or legal obligations. No single legal basis necessarily applies in every jurisdiction or situation.</p>
+      <h2>Sharing and international processing</h2>
+      <p>Relevant service providers, including Google and Cloudflare, may process information as described above. These providers may process data in multiple countries, subject to safeguards and policies applicable to their services.</p>
+      <h2>Retention</h2>
+      <p>Information is retained only for as long as reasonably necessary for the relevant purpose, subject to third-party provider policies and legal obligations.</p>
+      <h2>Your rights</h2>
+      <p>Depending on applicable law, you may have rights to request access, correction, deletion, restriction or objection, withdraw consent where applicable, or complain to the appropriate data protection authority. Contact us to make a request.</p>
+      <h2>Changes to this policy</h2>
+      <p>We may update this policy to reflect changes to the website or applicable practices. The latest version will be posted on this page.</p>
+    </div>}
+
+    {legal === 'cookies' && <div class="prose mt-8">
+      <p><strong>Last updated: August 15, 2026</strong></p>
+      <p>This Cookie Policy explains how Red Reactions, <a href={site.url}>redreactions.com</a>, and relevant third-party services may use cookies, local storage and similar technologies.</p>
+      <h2>What these technologies are</h2>
+      <p>Cookies are small text files stored by a browser. Local storage and similar technologies can store identifiers or preferences on a device. They can help a website function, support security, remember choices and enable advertising or measurement.</p>
+      <h2>Necessary and security technologies</h2>
+      <p>Cloudflare may use technologies necessary for network delivery, security and fraud prevention. These help protect the site and its visitors.</p>
+      <h2>Advertising technologies</h2>
+      <p>Red Reactions uses Google AdSense. Google and advertising partners may use cookies or similar technologies for advertising, measurement, fraud prevention and, where permitted, personalized advertising. Depending on your choices and location, advertising may instead be non-personalized.</p>
+      <h2>Consent management</h2>
+      <p>Google’s consent-management platform presents choices to visitors where required. You can consent, refuse consent, or manage your selections through the site’s Google consent-management interface. You can return to that interface to change or revoke choices where it is available.</p>
+      <h2>YouTube embeds</h2>
+      <p>Articles may include YouTube videos using youtube-nocookie.com privacy-enhanced embeds. When an embed is loaded or you interact with it, YouTube or Google may use its own technologies and process information under its policies.</p>
+      <h2>Managing cookies in your browser</h2>
+      <p>Most browsers let you review, block or delete cookies through browser settings. Blocking some technologies can affect how websites or embedded content work. Browser settings do not necessarily remove information already held by third-party providers.</p>
+      <h2>Changes to this policy</h2>
+      <p>We may update this policy as the site or its services change. The latest version will be posted on this page.</p>
+      <h2>Contact</h2>
+      <p>For cookie-related questions, email <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>.</p>
+    </div>}
+
+    {legal === 'terms' && <div class="prose mt-8">
+      <p><strong>Last updated: August 15, 2026</strong></p>
+      <p>Red Reactions is an informational and editorial entertainment website. By using this site, you agree to use it lawfully and responsibly.</p>
+      <h2>Editorial content</h2>
+      <p>Coverage may include news, criticism, commentary and opinion. Reviews and opinions are subjective. While we aim for accuracy, information may change and is not guaranteed to remain current, complete or error-free.</p>
+      <h2>Third-party links</h2>
+      <p>The site may link to third-party websites or embedded services. Red Reactions does not control those services and is not responsible for their content, availability or practices.</p>
+      <h2>Intellectual property</h2>
+      <p>Unless otherwise noted, Red Reactions’ original editorial content is protected by applicable intellectual-property law. Do not reproduce or republish it beyond what applicable law permits without permission.</p>
+      <h2>Liability</h2>
+      <p>To the extent permitted by applicable law, Red Reactions is not liable for losses arising from use of, or reliance on, the site or third-party services linked from it.</p>
+      <h2>Changes</h2>
+      <p>We may update these terms from time to time. Continued use after an update means you should review the current version.</p>
+      <h2>Contact</h2>
+      <p>Questions about these terms can be sent to <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>.</p>
+    </div>}
+
+    {legal === 'copyright' && <div class="prose mt-8">
+      <p><strong>Last updated: August 15, 2026</strong></p>
+      <p>Red Reactions publishes original commentary and may use properly sourced, licensed or promotional material where appropriate.</p>
+      <h2>Copyright concerns and takedown requests</h2>
+      <p>If you believe material on this site infringes your copyright or raises another rights concern, email <a href={`mailto:${site.contactEmail}?subject=${encodeURIComponent('Copyright or takedown request')}`}>{site.contactEmail}</a> with:</p>
+      <ul><li>identification of the copyrighted work or other material at issue;</li><li>the URL of the material on Red Reactions;</li><li>your contact details; and</li><li>an explanation of the concern.</li></ul>
+      <p>We will review complete requests and respond as appropriate. This page does not designate a registered DMCA agent.</p>
+    </div>}
+
+    {legal === 'editorial-policy' && <div class="prose mt-8">
+      <p><strong>Last updated: August 15, 2026</strong></p>
+      <p>Red Reactions publishes original reporting, commentary, criticism and analysis across entertainment culture.</p>
+      <h2>Sources and accuracy</h2>
+      <p>We aim to attribute sources clearly and distinguish confirmed fact, reporting, rumor and opinion. When material errors are identified, we review and correct them as appropriate.</p>
+      <h2>Opinion and independence</h2>
+      <p>Reviews and commentary reflect editorial judgment. Editorial decisions are made independently and are not for sale.</p>
+      <h2>AI-assisted work</h2>
+      <p>Where AI tools assist editorial work, their output is subject to human editorial review. We do not treat AI-generated material as a substitute for verification, attribution or editorial responsibility.</p>
+      <h2>Corrections</h2>
+      <p>To report a possible error or request a correction, email <a href={`mailto:${site.contactEmail}?subject=${encodeURIComponent('Correction request')}`}>{site.contactEmail}</a>.</p>
+    </div>}
+  </section>
+</BaseLayout>
