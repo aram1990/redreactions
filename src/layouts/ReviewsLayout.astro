@@ -1,0 +1,15 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import ReviewCard from '../components/cards/ReviewCard.astro';
+import type { Article } from '../lib/articles';
+import { reviewTopicLabel } from '../lib/reviews';
+interface Props { articles: Article[]; }
+const { articles } = Astro.props;
+const [latest, ...rest] = articles;
+const topics = [...new Set(articles.flatMap(article => article.data.topics))];
+---
+<BaseLayout title="Reviews | Red Reactions" description="Movies. TV. Games. Anime. No sugarcoating.">
+  <section class="border-b border-line bg-panel py-10 md:py-14"><div class="wrap"><p class="eyebrow">Red Reactions</p><h1 class="display mt-2 text-5xl sm:text-6xl">Reviews</h1><p class="mt-4 max-w-2xl text-lg text-muted">Movies. TV. Games. Anime. No sugarcoating.</p><nav class="mt-6 flex flex-wrap gap-2" aria-label="Review categories"><a class="border border-red bg-red px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-white hover:text-white" href="#latest">All</a>{topics.map(topic => <a class="border border-line bg-white px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-paper hover:border-red" href={`/${topic}/`}>{reviewTopicLabel(topic)}</a>)}</nav></div></section>
+  <section id="latest" class="wrap py-10"><p class="eyebrow">Latest review</p>{latest ? <div class="mt-4"><ReviewCard article={latest} featured /></div> : <p class="mt-4 text-muted">No reviews have been published yet.</p>}</section>
+  {rest.length > 0 && <section class="wrap pb-12"><p class="eyebrow">More reviews</p><div class="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">{rest.map(article => <ReviewCard {article} />)}</div></section>}
+</BaseLayout>

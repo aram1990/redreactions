@@ -1,0 +1,10 @@
+---
+import { reviewLabel } from '../../lib/reviews';
+interface Props { rating: number; compact?: boolean; }
+const { rating, compact = false } = Astro.props;
+const label = reviewLabel(rating);
+---
+<aside class:list={['review-score border border-red bg-contrast text-white', compact ? 'p-3' : 'mt-6 p-4 sm:flex sm:items-center sm:gap-5']} aria-label={`Red Reactions score: ${rating} out of 10, ${label}`}>
+  <div><p class="text-[.65rem] font-extrabold uppercase tracking-[.16em] text-red">Red Reactions Score</p><p class:list={["display mt-1 text-red", compact ? 'text-3xl' : 'text-4xl']}><span>{rating}</span><span class="text-lg text-white">/10</span></p></div>
+  <p class:list={["mt-1 font-bold uppercase tracking-[.12em] text-white", !compact && 'sm:mt-0']}>{label}</p>
+</aside>

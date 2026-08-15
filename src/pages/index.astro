@@ -4,6 +4,7 @@ import ArticleCard from '../components/cards/ArticleCard.astro';
 import SectionHeading from '../components/ui/SectionHeading.astro';
 import { getPublishedArticles, articlePath } from '../lib/articles';
 import { site } from '../config/site';
+import { isReview } from '../lib/reviews';
 
 const articles = await getPublishedArticles();
 const featured = articles.filter(a => a.data.featured);
@@ -11,6 +12,7 @@ const leadStories = featured.length ? featured : articles;
 const [lead, ...secondary] = leadStories;
 const trending = articles.filter(a => a.data.trending);
 const byType = (type: string) => articles.filter(a => a.data.contentType === type);
+const reviews = articles.filter(a => isReview(a.data.rating));
 const byTopic = (topic: string) => articles.filter(a => a.data.topics.includes(topic as never));
 const universes = ['movies', 'tv', 'anime', 'gaming', 'comics'].map(topic => ({ topic, articles: byTopic(topic) })).filter(group => group.articles.length > 0);
 const ld = { '@context': 'https://schema.org', '@type': 'WebSite', name: site.name, url: site.url, description: site.description, publisher: { '@type': 'Organization', name: site.name } };
@@ -19,7 +21,7 @@ const ld = { '@context': 'https://schema.org', '@type': 'WebSite', name: site.na
   {trending.length > 0 && <section class="border-b border-line bg-panel"><div class="wrap flex gap-3 overflow-auto py-3 text-xs font-bold uppercase tracking-wider"><span class="text-red">Breaking</span>{trending.slice(0,3).map(a => <a class="whitespace-nowrap" href={articlePath(a)}>{a.data.title}</a>)}</div></section>}
   {lead && <section class="wrap py-8 md:py-12"><div class="mb-5 flex items-center gap-3"><span class="eyebrow">Unfiltered coverage</span><span class="h-px flex-1 bg-line"></span></div><div class="grid gap-4 lg:grid-cols-[2fr_1fr]"><ArticleCard article={lead} variant="hero" />{secondary.length > 0 && <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">{secondary.slice(0,2).map(a => <ArticleCard article={a} />)}</div>}</div></section>}
   {trending.length > 0 && <section class="wrap py-8"><SectionHeading title="Trending Now" /><div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">{trending.map(a => <ArticleCard article={a} variant="compact" />)}</div></section>}
-  {articles.length > 0 && <section class="wrap py-8"><SectionHeading title="Latest News" href="/news/" label="All coverage" /><div class="grid gap-4 lg:grid-cols-[1.5fr_1fr]"><div>{articles.slice(0,4).map(a => <div class="mb-3"><ArticleCard article={a} variant="horizontal" /></div>)}</div>{byType('review').length > 0 && <div class="border-l-0 border-line lg:border-l lg:pl-8"><SectionHeading title="Reviews" href="/reviews/" />{byType('review').map(a => <ArticleCard article={a} variant="review" />)}</div>}</div></section>}
+  {articles.length > 0 && <section class="wrap py-8"><SectionHeading title="Latest News" href="/news/" label="All coverage" /><div class="grid gap-4 lg:grid-cols-[1.5fr_1fr]"><div>{articles.slice(0,4).map(a => <div class="mb-3"><ArticleCard article={a} variant="horizontal" /></div>)}</div>{reviews.length > 0 && <div class="border-l-0 border-line lg:border-l lg:pl-8"><SectionHeading title="Reviews" href="/reviews/" />{reviews.map(a => <ArticleCard article={a} variant="review" />)}</div>}</div></section>}
   {(byType('reaction').length > 0 || byType('trailer').length > 0) && <section class="wrap py-8"><SectionHeading title="Reactions & Trailers" href="/reactions/" /><div class="grid gap-4 md:grid-cols-2">{[...byType('reaction'), ...byType('trailer')].map(a => <ArticleCard article={a} variant="video" />)}</div></section>}
   {universes.length > 0 && <section class="wrap py-8"><SectionHeading title="By Universe" /><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{universes.map(({ topic, articles: topicArticles }) => <div class="card p-5"><p class="eyebrow">{topic === 'tv' ? 'TV & Streaming' : topic}</p><h2 class="display mt-3 text-2xl">{topic}</h2><div class="mt-4 space-y-3">{topicArticles.slice(0,2).map(a => <a class="block text-sm font-bold" href={articlePath(a)}>{a.data.title}</a>)}</div></div>)}</div></section>}
   <section class="mt-10 border-y border-line bg-panel py-12"><div class="wrap grid gap-5 md:grid-cols-[1fr_auto] md:items-end"><div><p class="eyebrow">Coming soon</p><h2 class="display mt-2 text-4xl">The no-filter newsletter</h2><p class="mt-2 text-muted">A future editorial newsletter. Connect an approved provider before enabling signups.</p></div><a class="w-fit bg-red px-5 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-[#c90711] hover:text-white" href="/contact/">Get in touch</a></div></section>
