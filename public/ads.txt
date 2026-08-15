@@ -1,2 +1,1 @@
-# Add the Google AdSense-provided ads.txt line here after approval.
-# Never add a publisher ID you do not control.
+google.com, pub-2390350333397010, DIRECT, f08c47fec0942fa0
