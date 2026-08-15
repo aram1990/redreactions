@@ -10,7 +10,6 @@
     "check": "astro check"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^14.2.1",
     "@astrojs/mdx": "^7.0.5",
     "@astrojs/rss": "^4.0.12",
     "@tailwindcss/vite": "^4.1.12",
