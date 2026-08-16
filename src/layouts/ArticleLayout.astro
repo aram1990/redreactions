@@ -20,12 +20,21 @@ const publisher = {
   '@type': 'Organization', name: 'Red Reactions', url: site.url,
   logo: { '@type': 'ImageObject', url: new URL('/images/Logo/redreactionslogo.jpg', site.url).href },
 };
+const videoJsonLd = d.youtubeId && d.youtubeUploadDate && d.youtubeThumbnailUrl ? {
+  '@type': 'VideoObject',
+  name: d.youtubeTitle || d.title,
+  description: d.youtubeDescription || d.description,
+  thumbnailUrl: d.youtubeThumbnailUrl,
+  uploadDate: d.youtubeUploadDate.toISOString(),
+  embedUrl: `https://www.youtube-nocookie.com/embed/${d.youtubeId}`,
+  ...(d.youtubeDuration ? { duration: d.youtubeDuration } : {}),
+} : null;
 const articleJsonLd = {
     '@type': d.contentType === 'news' ? 'NewsArticle' : 'Article',
     headline: d.title, description: d.description, datePublished: d.publishedAt.toISOString(), dateModified: (d.updatedAt || d.publishedAt).toISOString(),
     author: { '@type': 'Person', name: d.author }, publisher, image: new URL(d.heroImage, site.url).href,
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
-    ...(d.youtubeId ? { video: { '@type': 'VideoObject', name: d.title, embedUrl: `https://www.youtube-nocookie.com/embed/${d.youtubeId}` } } : {}),
+    ...(videoJsonLd ? { video: videoJsonLd } : {}),
   };
 const reviewJsonLd = review && d.reviewedItem ? {
   '@type': 'Review', author: { '@type': 'Person', name: d.author }, datePublished: d.publishedAt.toISOString(),
