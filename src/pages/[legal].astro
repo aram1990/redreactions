@@ -17,9 +17,10 @@ export async function getStaticPaths() {
 const legal = Astro.params.legal as keyof typeof documents;
 const doc = documents[legal];
 const disableAds = legal === 'privacy' || legal === 'cookies';
+const disableAnalytics = legal === 'privacy' || legal === 'cookies';
 ---
 
-<BaseLayout title={`${doc.title} | Red Reactions`} description={doc.description} {disableAds}>
+<BaseLayout title={`${doc.title} | Red Reactions`} description={doc.description} {disableAds} {disableAnalytics}>
   <section class="wrap max-w-3xl py-12">
     <p class="eyebrow">Legal & editorial</p>
     <h1 class="display mt-2 text-5xl">{doc.title}</h1>
@@ -37,6 +38,8 @@ const disableAds = legal === 'privacy' || legal === 'cookies';
       <p>Cloudflare Pages provides hosting, network delivery and security infrastructure for this website. Cloudflare may process technical request data needed to deliver and protect the site.</p>
       <h2>Google AdSense and advertising</h2>
       <p>Red Reactions uses Google AdSense. Google and advertising partners may use cookies or similar technologies for advertising, measurement, fraud prevention and, where permitted, personalization. Third-party vendors, including Google, may use cookies to serve ads based on visits to this and/or other websites. Google provides advertising and privacy controls through its own services and account settings.</p>
+      <h2>Google Analytics</h2>
+      <p>Red Reactions uses Google Analytics to understand site usage and performance. Information may include page views, device and browser information, approximate geographic information and interaction data. Google Analytics may use cookies or similar technologies depending on consent. Where consent is required, Analytics storage is governed by the site’s Google consent-management system. Google may process data according to its own privacy policies.</p>
       <h2>Consent choices</h2>
       <p>Visitors in regions where consent is required are shown Google’s consent-management message. They can consent, refuse consent or manage their choices through that interface.</p>
       <h2>YouTube embeds</h2>
@@ -64,6 +67,8 @@ const disableAds = legal === 'privacy' || legal === 'cookies';
       <p>Cloudflare may use technologies necessary for network delivery, security and fraud prevention. These help protect the site and its visitors.</p>
       <h2>Advertising technologies</h2>
       <p>Red Reactions uses Google AdSense. Google and advertising partners may use cookies or similar technologies for advertising, measurement, fraud prevention and, where permitted, personalized advertising. Depending on your choices and location, advertising may instead be non-personalized.</p>
+      <h2>Analytics technologies</h2>
+      <p>Google Analytics technologies may be used to measure visits and interactions. Analytics storage is subject to consent where required. You can change your consent through the site’s existing Google consent-management interface.</p>
       <h2>Consent management</h2>
       <p>Google’s consent-management platform presents choices to visitors where required. You can consent, refuse consent, or manage your selections through the site’s Google consent-management interface. You can return to that interface to change or revoke choices where it is available.</p>
       <h2>YouTube embeds</h2>
