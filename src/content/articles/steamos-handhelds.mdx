@@ -1,0 +1,92 @@
+---
+title: "Valve Is Expanding SteamOS to More Handhelds, and I Hope It Keeps Going"
+description: "SteamOS now runs on hardware Valve didn't build — including devices Microsoft co-engineered. Here's what's actually supported, what isn't, and why the competition is good for everyone."
+slug: "steamos-handhelds"
+publishedAt: 2026-08-16
+author: "Aram Anwar"
+contentType: "feature"
+topics: ["gaming"]
+tags: ["Gaming", "SteamOS", "Valve", "Handheld PC", "Opinion"]
+spoilers: false
+heroImage: "/images/articles/steamos-handhelds/steamos-handhelds-hero.webp"
+heroImageAlt: "Steam Deck OLED, Lenovo Legion Go S and ROG Xbox Ally gaming handhelds"
+featured: false
+trending: false
+draft: false
+---
+
+A decade ago Valve tried to put its operating system on other people's hardware and failed so completely that "Steam Machine" became a punchline.
+
+It's worth sitting with how thoroughly that has reversed. As of this summer, Valve's SteamOS release notes include increasingly broad support for hardware from ASUS, Lenovo, MSI, OneXPlayer, GPD, Anbernic, OrangePi and others — from controller and TDP support to device-specific fixes.
+
+What that support actually amounts to varies enormously by device, and it's worth being precise about the difference. A handful of machines ship with SteamOS from the factory. A larger group can install Valve's recovery image and get most things working. A larger group still simply appears in a changelog line because Valve fixed a gamepad mapping. All three get called "SteamOS support," and they are not the same thing.
+
+Even so, Valve is now actively patching hardware it has no commercial relationship with whatsoever. That's a strange and genuinely good thing, and I want more of it.
+
+## What actually changed
+
+The turning point was **SteamOS 3.8**, which hit the stable channel as build 3.8.10 on **June 18, 2026**. It's the biggest release the platform has had: a newer Arch base, Linux kernel 6.16, KDE Plasma 6.4.3, Wayland by default, initial support for Valve's Steam Machine, and — the part that matters here — the widest third-party hardware support Valve has ever shipped.
+
+Valve's own release notes list fixes and support for the ROG Ally line, the full Legion Go family, four MSI Claw variants, OneXPlayer's F1, X1 and Apex, the GPD Win 5 and Win Mini, the Anbernic Win600, OrangePi's NEO and Zotac's OLED handhelds.
+
+The most recent build, **SteamOS 3.8.25 Beta** (August 7), added initial gamepad support for the MSI Claw 8 EX AI+, the Konkr FIT and the Ayaneo Pocket S2, updated the OneXPlayer Apex, and fixed a resume-breaks-your-controls regression on the ROG Ally.
+
+The detail I keep coming back to: Valve is already adding SteamOS hardware support for the ROG Xbox Ally series — controller support, TDP control, speaker audio, SD-card reliability work — even though ASUS and Microsoft sell those machines as Windows handhelds.
+
+## The honest caveats
+
+Three, and they all matter.
+
+**3.8.25 is a beta with a known regression.** Valve flags degraded performance when composition is required — notably with FSR enabled — and says it's already fixed in the current stable release, 3.8.16. Valve's own advice is that affected users should stay on stable. This is not a "flash it today" situation.
+
+**Factory SteamOS hardware remains much more limited.** Valve's Steam Deck ships with it, and Lenovo already sells a Powered by SteamOS Legion Go S. Lenovo has also announced a SteamOS version of the Legion Go 2, but as of August 16 it is still listed as coming soon. Everything else means downloading a recovery image, wiping Windows, and accepting that some things won't be perfect. Valve's language is consistently "initial" and "improved" rather than "done."
+
+<img src="/images/articles/steamos-handhelds/steamos-handhelds-legion-go-s.webp" alt="Lenovo Legion Go S Powered by SteamOS" loading="lazy" />
+
+One especially unusual addition is Ayaneo's Pocket S2, an Android handheld built around Qualcomm's ARM-based Snapdragon G3 Gen 3. Valve's 3.8.25 notes add initial gamepad support for it — which is a controller mapping, not a SteamOS installation. Konkr's FIT, by contrast, is a Windows handheld built around AMD Ryzen AI hardware.
+
+## Why it works better on a small screen
+
+Having used both, the case for SteamOS on a handheld isn't really about frame rates. It's about the fifty small frictions Windows puts between you and a game.
+
+SteamOS boots into a controller-driven interface. You never see a desktop unless you go looking. It's designed around quick suspend and resume, which gives handheld play a much more console-like feel. Windows handhelds still fight Modern Standby, still surface reboot prompts, still hand you a desktop UI designed for a mouse on a seven-inch panel.
+
+Valve also does the unglamorous work: shader pre-caching that can reduce compilation-related stutter, TDP and refresh-rate controls in the quick menu rather than a vendor app, and system updates handled much more like an appliance than a traditional Windows desktop.
+
+## Why Windows still wins for a lot of people
+
+I'd be lying if I said this was settled.
+
+**Anti-cheat is the wall.** Several major competitive multiplayer games still block or simply don't support SteamOS and Linux, because of their anti-cheat implementations or publisher policy.
+
+The mechanism matters more than any list, because it's what determines whether this ever changes. Easy Anti-Cheat and BattlEye both have Linux support — but publishers have to switch it on, and many haven't. Bungie hasn't enabled it for Destiny 2. Other systems don't support Linux at all: Activision's RICOCHET rules out modern Call of Duty, Riot's Vanguard rules out Valorant and League of Legends, and EA's Javelin rules out Battlefield and EA Sports titles. If you play any of these, this conversation is over before it starts.
+
+**Game Pass is the other big one.** The Xbox app relies on Windows Store container formats Proton can't execute, so native PC Game Pass installs are a genuine Windows-only advantage. Xbox Cloud Gaming does work on SteamOS through a browser — it's not nothing — but streaming isn't the same as owning the install, and it's useless without a connection.
+
+**Everything outside Steam is friction.** Epic, GOG, EA App, Battle.net — all possible via Desktop Mode or Heroic, none of it as simple as double-clicking an installer.
+
+## Competition is the actual story
+
+Here's the part I find genuinely encouraging, and it's the reason I want SteamOS to keep spreading even if you never install it.
+
+Windows 11 on handhelds was bad for years, and Microsoft had little obvious reason to fix it. Then SteamOS started showing up on rival hardware — and Microsoft shipped a full-screen Xbox experience that boots straight into a controller UI and suspends background services to free up memory, then co-engineered the ROG Xbox Ally with ASUS around it.
+
+Microsoft hasn't said SteamOS forced its hand, so we shouldn't pretend we can prove the cause. But competition now exists where there previously wasn't much of it, and Microsoft's controller-first Xbox experience makes Windows far more serious about handheld gaming than it used to be.
+
+And it cuts the other way too: Valve's own release notes now include hardware support for the ROG Xbox Ally — the device built specifically to showcase Microsoft's handheld answer. Both platforms are being pushed to take handhelds seriously, and handheld owners are the ones collecting the winnings.
+
+<img src="/images/articles/steamos-handhelds/steamos-handhelds-rog-xbox-ally.webp" alt="ROG Xbox Ally and ROG Xbox Ally X Windows gaming handhelds" loading="lazy" />
+
+## What I want to happen next
+
+**Editorial opinion, clearly labelled.**
+
+I want more handhelds sold with an OS choice at checkout, the way Lenovo does it — the same hardware, two SKUs, no Windows licence fee on the Linux one. I want Valve to keep the recovery images public and keep taking regression reports on hardware it doesn't sell. And I'd like at least one major publisher to flip the EAC switch and find out that the sky doesn't fall.
+
+To be clear about what I'm not arguing: I don't want Windows to disappear from handhelds. For a lot of people it's still the right answer, and a market where Valve had no competition would get worse, not better. None of this requires SteamOS to win. It just requires it to stay credible enough that Microsoft can't stop trying.
+
+## The bottom line
+
+SteamOS still can't play *Call of Duty*, still can't download Game Pass titles, and still asks you to wipe your drive to get started. Those are real limitations and I'm not going to pretend otherwise.
+
+But a gaming-focused Linux OS that Valve is actively adapting to an expanding range of third-party handheld hardware is something this market badly needed, and its mere existence has already made the Windows option better. Whatever you end up buying, that's worth cheering for.
