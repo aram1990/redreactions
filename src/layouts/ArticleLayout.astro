@@ -36,6 +36,12 @@ const reviewJsonLd = review && d.reviewedItem ? {
       '@type': 'TVSeason', name: d.reviewedItem.partOfSeason,
       ...(d.reviewedItem.partOfSeries ? { partOfSeries: { '@type': 'TVSeries', name: d.reviewedItem.partOfSeries } } : {}),
     } } : {}),
+    ...(d.reviewedItem.type === 'VideoGame' && d.reviewedItem.developer ? { developer: { '@type': 'Organization', name: d.reviewedItem.developer } } : {}),
+    ...(d.reviewedItem.type === 'VideoGame' && d.reviewedItem.publisher ? { publisher: { '@type': 'Organization', name: d.reviewedItem.publisher } } : {}),
+    ...(d.reviewedItem.type === 'VideoGame' && (d.reviewedItem.originalReleaseYear || d.reviewedItem.editionReleaseYear) ? { additionalProperty: [
+      ...(d.reviewedItem.originalReleaseYear ? [{ '@type': 'PropertyValue', name: 'Original base-game release year', value: d.reviewedItem.originalReleaseYear }] : []),
+      ...(d.reviewedItem.editionReleaseYear ? [{ '@type': 'PropertyValue', name: 'Definitive Edition release year', value: d.reviewedItem.editionReleaseYear }] : []),
+    ] } : {}),
   },
   reviewRating: { '@type': 'Rating', ratingValue: d.rating, bestRating: 10, worstRating: 1 },
 } : null;
