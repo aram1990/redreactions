@@ -29,7 +29,14 @@ const articleJsonLd = {
   };
 const reviewJsonLd = review && d.reviewedItem ? {
   '@type': 'Review', author: { '@type': 'Person', name: d.author }, datePublished: d.publishedAt.toISOString(),
-  itemReviewed: { '@type': d.reviewedItem.type, name: d.reviewedItem.name },
+  itemReviewed: {
+    '@type': d.reviewedItem.type, name: d.reviewedItem.name,
+    ...(d.reviewedItem.type === 'TVEpisode' && d.reviewedItem.episodeNumber ? { episodeNumber: d.reviewedItem.episodeNumber } : {}),
+    ...(d.reviewedItem.type === 'TVEpisode' && d.reviewedItem.partOfSeason ? { partOfSeason: {
+      '@type': 'TVSeason', name: d.reviewedItem.partOfSeason,
+      ...(d.reviewedItem.partOfSeries ? { partOfSeries: { '@type': 'TVSeries', name: d.reviewedItem.partOfSeries } } : {}),
+    } } : {}),
+  },
   reviewRating: { '@type': 'Rating', ratingValue: d.rating, bestRating: 10, worstRating: 1 },
 } : null;
 const jsonLd = { '@context': 'https://schema.org', '@graph': [publisher, articleJsonLd, ...(reviewJsonLd ? [reviewJsonLd] : [])] };
