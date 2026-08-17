@@ -66,7 +66,7 @@ const jsonLd = { '@context': 'https://schema.org', '@graph': [publisher, article
       <div class="mt-6 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted"><span>By <b class="text-paper">{d.author}</b></span><time datetime={d.publishedAt.toISOString()}>Published {formatDate(d.publishedAt)}</time>{wasUpdated && d.updatedAt && <time datetime={d.updatedAt.toISOString()}>Updated {formatDate(d.updatedAt)}</time>}<span>{readingTime(article.body || '')} min read</span></div>
       {review && <ReviewScore rating={d.rating!} />}
     </header>
-    <figure class:list={["my-8 overflow-hidden border border-line bg-panel", d.compactHero && 'article-hero--compact']}><img class="article-hero-image aspect-video w-full object-cover" src={d.heroImage} alt={d.heroImageAlt} width="1600" height="900" /><figcaption class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-3 py-2 text-xs text-muted"><span>{d.heroImageCaption || d.heroImageAlt}</span>{d.heroImageCredit && <span>{d.heroImageCredit}</span>}</figcaption></figure>
+    <figure class:list={["my-8 overflow-hidden border border-line bg-panel", d.compactHero && 'article-hero--compact', d.heroImageAspect === 'portrait' && 'article-hero--portrait']}><img class:list={["article-hero-image aspect-video w-full", d.heroImageFit === 'contain' ? 'object-contain' : 'object-cover']} src={d.heroImage} alt={d.heroImageAlt} width="1600" height="900" style={d.heroImagePosition ? `object-position: ${d.heroImagePosition}` : undefined} /><figcaption class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-3 py-2 text-xs text-muted"><span>{d.heroImageCaption || d.heroImageAlt}</span>{d.heroImageCredit && <span>{d.heroImageCredit}</span>}</figcaption></figure>
     {d.spoilers && <aside class="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"><b>Spoiler warning:</b> this article discusses story details.</aside>}
     <AdSlot placement="ARTICLE_TOP" />
     <div class="grid gap-10 lg:grid-cols-[minmax(0,720px)_220px] lg:justify-center">
@@ -86,3 +86,7 @@ const jsonLd = { '@context': 'https://schema.org', '@graph': [publisher, article
   </article>
   <script>document.querySelector('[data-copy-link]')?.addEventListener('click', async (event) => { const el = event.currentTarget as HTMLButtonElement; await navigator.clipboard?.writeText(el.dataset.copyLink || ''); el.textContent = 'Copied'; });</script>
 </BaseLayout>
+
+<style is:global>
+  @media (max-width: 639px) { .article-hero--portrait .article-hero-image { aspect-ratio: 3 / 4; object-fit: cover; } }
+</style>
