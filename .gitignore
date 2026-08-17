@@ -6,3 +6,5 @@ dist/
 !.env.example
 .wrangler/
 *.log
+
+**/SOURCES-AND-PLACEMENT.txt
