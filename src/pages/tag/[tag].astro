@@ -1,5 +1,5 @@
 ---
 import CategoryLayout from '../../layouts/CategoryLayout.astro'; import { getPublishedArticles, tagSlug } from '../../lib/articles';
-export async function getStaticPaths(){const articles=await getPublishedArticles(); const tags=[...new Set(articles.flatMap(a=>a.data.tags))];return tags.map(tag=>({params:{tag:tagSlug(tag)},props:{tag,articles:articles.filter(a=>a.data.tags.includes(tag))}}));} const {tag,articles}=Astro.props;
+export async function getStaticPaths(){const articles=await getPublishedArticles(); const tagGroups=new Map<string,string[]>(); for(const tag of [...new Set(articles.flatMap(a=>a.data.tags))]){const slug=tagSlug(tag);tagGroups.set(slug,[...(tagGroups.get(slug)??[]),tag]);} return [...tagGroups].map(([slug,tags])=>({params:{tag:slug},props:{tag:tags.join(' / '),articles:articles.filter(a=>a.data.tags.some(tag=>tags.includes(tag)))}}));} const {tag,articles}=Astro.props;
 ---
 <CategoryLayout title={`#${tag}`} description={`All published Red Reactions coverage tagged ${tag}.`} {articles} />
