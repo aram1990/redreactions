@@ -7,15 +7,15 @@ import { site } from '../config/site';
 import { isReview } from '../lib/reviews';
 
 const articles = await getPublishedArticles();
-const featured = articles.filter(a => a.data.featured);
 const newsArticles = articles.filter(a => a.data.contentType === 'news');
 const newsLead = newsArticles[0] || articles[0];
 const secondaryNews = newsArticles.filter(a => a.id !== newsLead?.id).slice(0, 5);
 const trending = articles.filter(a => a.data.trending);
 const trendingStories = trending.filter(a => a.id !== newsLead?.id);
+const loreArticles = articles.filter(a => a.data.contentType === 'lore');
 const byType = (type: string) => articles.filter(a => a.data.contentType === type);
 const reviews = articles.filter(a => isReview(a.data.rating));
-const mustRead = (featured.length ? featured : articles.filter(a => a.data.contentType === 'feature' || a.data.contentType === 'lore'))
+const mustRead = articles.filter(a => a.data.featured || a.data.contentType === 'feature')
   .filter(a => a.id !== newsLead?.id && a.data.contentType !== 'news')
   .slice(0, 4);
 const byTopic = (topic: string) => articles.filter(a => a.data.topics.includes(topic as never));
@@ -26,6 +26,7 @@ const ld = { '@context': 'https://schema.org', '@type': 'WebSite', name: site.na
   {trending.length > 0 && <section class="border-b border-line bg-panel"><div class="wrap flex gap-3 overflow-auto py-3 text-xs font-bold uppercase tracking-wider"><span class="text-red">Breaking</span>{trending.slice(0,3).map(a => <a class="whitespace-nowrap" href={articlePath(a)}>{a.data.title}</a>)}</div></section>}
   {newsLead && <section class="wrap py-8 md:py-12"><h1 class="display mb-4 text-2xl sm:text-3xl">Red Reactions — Entertainment News, Reviews & Lore</h1><SectionHeading title="Latest News" href="/news/" label="All news" /><ArticleCard article={newsLead} variant="hero" showNewsBadge headingLevel="h3" />{secondaryNews.length > 0 && <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{secondaryNews.map(a => <ArticleCard article={a} showNewsBadge headingLevel="h3" />)}</div>}</section>}
   {trendingStories.length > 0 && <section class="wrap py-8"><SectionHeading title="Trending Now" /><div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">{trendingStories.map(a => <ArticleCard article={a} variant="compact" headingLevel="h3" />)}</div></section>}
+  {loreArticles.length > 0 && <section class="wrap py-8"><SectionHeading title="Lore & Explained" href="/lore/" label="All Lore" /><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{loreArticles.slice(0,4).map(a => <ArticleCard article={a} headingLevel="h3" />)}</div></section>}
   {mustRead.length > 0 && <section class="wrap py-8"><SectionHeading title="Featured & Must Read" /><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{mustRead.map(a => <ArticleCard article={a} headingLevel="h3" />)}</div></section>}
   {reviews.length > 0 && <section class="wrap py-8"><SectionHeading title="Reviews" href="/reviews/" /><div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{reviews.slice(0,3).map(a => <ArticleCard article={a} variant="review" headingLevel="h3" />)}</div></section>}
   {(byType('reaction').length > 0 || byType('trailer').length > 0) && <section class="wrap py-8"><SectionHeading title="Reactions & Trailers" href="/reactions/" /><div class="grid gap-4 md:grid-cols-2">{[...byType('reaction'), ...byType('trailer')].map(a => <ArticleCard article={a} variant="video" headingLevel="h3" />)}</div></section>}

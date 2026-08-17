@@ -1,12 +1,11 @@
 ---
 import { navItems, site } from '../../config/site';
-const headerNavItems = navItems.filter(([, href]) => href !== '/lore/');
 ---
 <a class="skip" href="#main">Skip to content</a>
 <header class="sticky top-0 z-50 border-b border-line bg-white/95 text-paper backdrop-blur">
  <div class="wrap flex min-h-16 items-center justify-between gap-4">
   <a href="/" class="leading-none" aria-label={`${site.name} home`}><span class="display block text-2xl text-paper sm:text-3xl">RED <i class="not-italic text-red">REACTIONS</i></span><span class="hidden text-[.57rem] font-bold tracking-[.17em] text-muted sm:block">{site.tagline}</span></a>
-  <nav class="hidden items-center gap-4 text-xs font-bold uppercase tracking-wide xl:flex" aria-label="Primary">{headerNavItems.map(([label, href]) => <a href={href}>{label}</a>)}<a class="rounded-full border border-line px-3 py-2 hover:border-red" href="/search/">Search</a></nav>
-  <details class="relative xl:hidden"><summary class="cursor-pointer list-none rounded border border-line px-3 py-2 text-xs font-bold uppercase hover:border-red">Menu <span class="sr-only">navigation</span></summary><nav class="absolute right-0 top-11 grid w-64 border border-line bg-white p-4 shadow-xl" aria-label="Mobile primary">{headerNavItems.map(([label, href]) => <a class="border-b border-line py-3 text-sm font-bold" href={href}>{label}</a>)}<a class="pt-3 text-red" href="/search/">Search</a></nav></details>
+  <nav class="hidden items-center gap-4 text-xs font-bold uppercase tracking-wide xl:flex" aria-label="Primary">{navItems.map(([label, href]) => <a href={href}>{label}</a>)}<a class="rounded-full border border-line px-3 py-2 hover:border-red" href="/search/">Search</a></nav>
+  <details class="relative xl:hidden"><summary class="cursor-pointer list-none rounded border border-line px-3 py-2 text-xs font-bold uppercase hover:border-red">Menu <span class="sr-only">navigation</span></summary><nav class="absolute right-0 top-11 grid w-64 border border-line bg-white p-4 shadow-xl" aria-label="Mobile primary">{navItems.map(([label, href]) => <a class="border-b border-line py-3 text-sm font-bold" href={href}>{label}</a>)}<a class="pt-3 text-red" href="/search/">Search</a></nav></details>
  </div>
 </header>
