@@ -24,6 +24,7 @@ const fallback = contentTypeFallback[contentType]
     try {
       const raw = sessionStorage.getItem('rr:hub');
       if (!raw) return;
+      sessionStorage.removeItem('rr:hub'); // one-shot: consume immediately so it can never leak into a later, unrelated navigation
       const ctx = JSON.parse(raw);
       if (!ctx || typeof ctx.href !== 'string' || typeof ctx.label !== 'string') return;
       if (!ctx.href.startsWith('/') || ctx.href.startsWith('//')) return; // same-origin paths only
