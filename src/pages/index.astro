@@ -8,7 +8,8 @@ import { isReview } from '../lib/reviews';
 
 const articles = await getPublishedArticles();
 const newsArticles = articles.filter(a => a.data.contentType === 'news');
-const newsLead = newsArticles[0] || articles[0];
+const featuredNews = newsArticles.filter(a => a.data.featured);
+const newsLead = featuredNews[0] || newsArticles[0] || articles[0];
 const secondaryNews = newsArticles.filter(a => a.id !== newsLead?.id).slice(0, 5);
 const trending = articles.filter(a => a.data.trending);
 const trendingStories = trending.filter(a => a.id !== newsLead?.id);
