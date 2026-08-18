@@ -1,0 +1,19 @@
+---
+import CategoryLayout from '../../layouts/CategoryLayout.astro';
+import { genreLabel, getPublishedArticles } from '../../lib/articles';
+import { groupByCoverageType, MIN_ROUTE_ARTICLES } from '../../lib/taxonomy';
+
+export async function getStaticPaths() {
+  const articles = await getPublishedArticles();
+  const genres = [...new Set(articles.flatMap(article => article.data.genres))];
+  return genres
+    .map(genre => ({ genre, articles: articles.filter(article => article.data.genres.includes(genre)) }))
+    .filter(g => g.articles.length >= MIN_ROUTE_ARTICLES)
+    .map(({ genre, articles }) => ({ params: { genre }, props: { genre, articles } }));
+}
+
+const { genre, articles } = Astro.props;
+const title = genreLabel(genre);
+const sections = groupByCoverageType(articles).map(c => ({ label: `${title} ${c.label}`, articles: c.articles }));
+---
+<CategoryLayout {title} description={`${title} news, reviews, reactions, trailers and lore from Red Reactions.`} {articles} {sections} />

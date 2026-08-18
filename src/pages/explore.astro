@@ -1,0 +1,56 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HubContext from '../components/nav/HubContext.astro';
+import { franchisePath, getPublishedArticles } from '../lib/articles';
+import { groupByGenre, groupByMedium } from '../lib/taxonomy';
+
+const articles = await getPublishedArticles();
+const franchises = [...new Set(articles.map(article => article.data.franchise).filter(Boolean) as string[])]
+  .map((franchise) => ({ franchise, articles: articles.filter(article => article.data.franchise === franchise) }))
+  .sort((a, b) => b.articles.length - a.articles.length || a.franchise.localeCompare(b.franchise));
+const genres = groupByGenre(articles);
+const mediums = groupByMedium(articles);
+const coverage = [
+  { label: 'News', href: '/news/', description: 'Official announcements and developments.', articles: articles.filter(article => article.data.contentType === 'news') },
+  { label: 'Reviews', href: '/reviews/', description: 'Critical verdicts and scored coverage.', articles: articles.filter(article => article.data.rating !== undefined) },
+  { label: 'Lore & Explained', href: '/lore/', description: 'Characters, worlds, timelines and context.', articles: articles.filter(article => article.data.contentType === 'lore') },
+  { label: 'Reactions', href: '/reactions/', description: 'First takes and instant analysis.', articles: articles.filter(article => article.data.contentType === 'reaction') },
+  { label: 'Trailers', href: '/trailers/', description: 'Official trailer coverage and breakdowns.', articles: articles.filter(article => article.data.contentType === 'trailer' || Boolean(article.data.youtubeId)) },
+].filter(item => item.articles.length > 0);
+---
+<HubContext label="Explore" />
+<BaseLayout title="Explore Red Reactions | Franchises, Genres & Entertainment Coverage" description="Browse Red Reactions by franchise, universe, genre and coverage type, including Marvel, DC, horror, gaming, movies, TV, anime, reviews and lore.">
+  <section class="wrap max-w-5xl py-12 md:py-16">
+    <p class="eyebrow">Discovery</p>
+    <h1 class="display mt-2 text-5xl sm:text-6xl">Explore Red Reactions</h1>
+    <p class="mt-4 max-w-2xl text-lg leading-relaxed text-muted">Find the stories, universes and genres you care about. Browse Red Reactions coverage across movies, TV, gaming, anime and comics.</p>
+  </section>
+
+  {franchises.length > 0 && <section class="wrap max-w-5xl py-8">
+    <h2 class="display text-3xl">Universes &amp; Franchises</h2>
+    <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {franchises.map(({ franchise, articles: franchiseArticles }) => <a class="card block p-5 transition hover:border-red" href={franchisePath(franchise)}><p class="eyebrow">{franchiseArticles.length} {franchiseArticles.length === 1 ? 'article' : 'articles'}</p><h3 class="display mt-2 text-2xl">{franchise}</h3><div class="mt-4 space-y-2">{franchiseArticles.slice(0, 2).map(article => <p class="text-sm font-bold text-paper">{article.data.title}</p>)}</div></a>)}
+    </div>
+  </section>}
+
+  {genres.length > 0 && <section class="wrap max-w-5xl py-8">
+    <h2 class="display text-3xl">Browse by Genre</h2>
+    <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {genres.map(({ label, path, articles: genreArticles }) => <a class="card block p-5 transition hover:border-red" href={path}><p class="eyebrow">{genreArticles.length} {genreArticles.length === 1 ? 'article' : 'articles'}</p><h3 class="display mt-2 text-2xl">{label}</h3></a>)}
+    </div>
+  </section>}
+
+  {mediums.length > 0 && <section class="wrap max-w-5xl py-8">
+    <h2 class="display text-3xl">Browse by Medium</h2>
+    <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {mediums.map(({ label, path, articles: mediumArticles }) => <a class="card block p-5 transition hover:border-red" href={path}><p class="eyebrow">{mediumArticles.length} {mediumArticles.length === 1 ? 'article' : 'articles'}</p><h3 class="display mt-2 text-2xl">{label}</h3></a>)}
+    </div>
+  </section>}
+
+  {coverage.length > 0 && <section class="wrap max-w-5xl py-8">
+    <h2 class="display text-3xl">Browse by Coverage</h2>
+    <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {coverage.map(({ label, href, description, articles: coverageArticles }) => <a class="card block p-5 transition hover:border-red" href={href}><p class="eyebrow">{coverageArticles.length} {coverageArticles.length === 1 ? 'article' : 'articles'}</p><h3 class="display mt-2 text-2xl">{label}</h3><p class="mt-2 text-sm leading-relaxed text-muted">{description}</p></a>)}
+    </div>
+  </section>}
+</BaseLayout>

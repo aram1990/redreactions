@@ -1,0 +1,33 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleCard from '../../components/cards/ArticleCard.astro';
+import SectionHeading from '../../components/ui/SectionHeading.astro';
+import BrowseCard from '../../components/hub/BrowseCard.astro';
+import HubContext from '../../components/nav/HubContext.astro';
+import { getPublishedArticles } from '../../lib/articles';
+import { HUB_COUNTS, groupByMedium, splitLatestArchive } from '../../lib/taxonomy';
+
+const articles = await getPublishedArticles();
+const trailers = articles.filter(a => a.data.contentType === 'trailer' || Boolean(a.data.youtubeId));
+const { latest, archive } = splitLatestArchive(trailers, HUB_COUNTS.trailers);
+const byMedium = groupByMedium(trailers);
+---
+<HubContext label="Trailers" />
+<BaseLayout title="Trailers | Red Reactions" description="Official trailer coverage and sharp-eyed breakdowns across movies, TV, anime and gaming.">
+  <section class="wrap py-10"><p class="eyebrow">Coverage</p><h1 class="display mt-2 text-5xl sm:text-6xl">Trailers</h1><p class="mt-4 max-w-2xl text-muted">Official trailer coverage and sharp-eyed breakdowns.</p></section>
+
+  <section class="wrap pb-10">
+    <SectionHeading title="Latest Trailers" />
+    {latest.length > 0 ? <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{latest.map(a => <ArticleCard article={a} variant="video" />)}</div> : <p class="text-muted">No trailer coverage has been published yet.</p>}
+  </section>
+
+  {byMedium.length > 0 && <section class="wrap pb-10 border-t border-line pt-10">
+    <SectionHeading title="Browse Trailers" />
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byMedium.map(({ label, slug, articles: mediumArticles }) => <BrowseCard label={`${label} Trailers`} href={`/trailers/${slug}/`} count={mediumArticles.length} sample={mediumArticles[0]} />)}</div>
+  </section>}
+
+  {archive.length > 0 && <section class="wrap py-10 border-t border-line">
+    <SectionHeading title="More Trailer Coverage" />
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{archive.map(a => <ArticleCard article={a} variant="video" />)}</div>
+  </section>}
+</BaseLayout>

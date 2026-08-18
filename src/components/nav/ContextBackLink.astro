@@ -1,0 +1,38 @@
+---
+import { mediumLabel } from '../../lib/taxonomy';
+interface Props { contentType: string; topics: string[]; }
+const { contentType, topics } = Astro.props;
+
+const contentTypeFallback: Record<string, { label: string; href: string }> = {
+  lore: { label: 'Lore', href: '/lore/' },
+  review: { label: 'Reviews', href: '/reviews/' },
+  news: { label: 'News', href: '/news/' },
+  reaction: { label: 'Reactions', href: '/reactions/' },
+  trailer: { label: 'Trailers', href: '/trailers/' },
+};
+const primaryTopic = topics[0];
+const fallback = contentTypeFallback[contentType]
+  ?? (primaryTopic ? { label: mediumLabel(primaryTopic), href: `/${primaryTopic}/` } : { label: 'Explore', href: '/explore/' });
+---
+<div class="mb-2 text-xs font-bold uppercase tracking-wide text-muted" data-rr-back data-fallback-label={fallback.label} data-fallback-href={fallback.href}>
+  <a class="hover:text-red" href={fallback.href}>← Back to {fallback.label}</a>
+</div>
+<script>
+  (function () {
+    const el = document.querySelector('[data-rr-back]');
+    if (!el) return;
+    try {
+      const raw = sessionStorage.getItem('rr:hub');
+      if (!raw) return;
+      const ctx = JSON.parse(raw);
+      if (!ctx || typeof ctx.href !== 'string' || typeof ctx.label !== 'string') return;
+      if (!ctx.href.startsWith('/') || ctx.href.startsWith('//')) return; // same-origin paths only
+      el.innerHTML = '';
+      const a = document.createElement('a');
+      a.className = 'hover:text-red';
+      a.href = ctx.href;
+      a.textContent = `← Back to ${ctx.label}`;
+      el.appendChild(a);
+    } catch { /* ignore malformed/unavailable sessionStorage */ }
+  })();
+</script>

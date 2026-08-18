@@ -1,0 +1,10 @@
+---
+// Drop into any browse/index page. Records "the last hub the reader was on" in
+// same-origin sessionStorage so article pages can render an accurate contextual
+// back link. Never uses query params and never touches other origins.
+interface Props { label: string; href?: string; }
+const { label, href = Astro.url.pathname } = Astro.props;
+---
+<script is:inline define:vars={{ label, href }}>
+  try { sessionStorage.setItem('rr:hub', JSON.stringify({ label, href })); } catch { /* sessionStorage unavailable */ }
+</script>

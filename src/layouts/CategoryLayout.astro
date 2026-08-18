@@ -1,5 +1,37 @@
 ---
-import BaseLayout from './BaseLayout.astro'; import ArticleCard from '../components/cards/ArticleCard.astro'; import SectionHeading from '../components/ui/SectionHeading.astro'; import type { Article } from '../lib/articles';
-interface Props { title:string; description:string; articles:Article[]; } const {title,description,articles}=Astro.props; const [lead,...rest]=articles;
+import BaseLayout from './BaseLayout.astro';
+import ArticleCard from '../components/cards/ArticleCard.astro';
+import SectionHeading from '../components/ui/SectionHeading.astro';
+import BrowseCard from '../components/hub/BrowseCard.astro';
+import HubContext from '../components/nav/HubContext.astro';
+import type { Article } from '../lib/articles';
+
+interface BrowseItem { label: string; href: string; count: number; sample?: Article; }
+interface CoverageSection { label: string; href?: string; articles: Article[]; }
+interface Props {
+  title: string; description: string; articles: Article[];
+  browse?: BrowseItem[]; browseTitle?: string;
+  sections?: CoverageSection[];
+}
+const { title, description, articles, browse = [], browseTitle = 'Browse', sections = [] } = Astro.props;
+const [lead, ...rest] = articles;
 ---
-<BaseLayout title={`${title} | Red Reactions`} description={description}><section class="wrap py-10"><p class="eyebrow">Coverage</p><h1 class="display mt-2 text-5xl sm:text-6xl">{title}</h1><p class="mt-4 max-w-2xl text-muted">{description}</p></section><section class="wrap"><SectionHeading title="Featured" />{lead ? <ArticleCard article={lead} variant="hero" /> : <p class="text-muted">No published articles in this section yet.</p>}</section><section class="wrap py-10"><SectionHeading title="Latest" /><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{rest.map(a=><ArticleCard article={a} />)}</div></section></BaseLayout>
+<HubContext label={title} />
+<BaseLayout title={`${title} | Red Reactions`} description={description}>
+  <section class="wrap py-10"><p class="eyebrow">Coverage</p><h1 class="display mt-2 text-5xl sm:text-6xl">{title}</h1><p class="mt-4 max-w-2xl text-muted">{description}</p></section>
+
+  {browse.length > 0 && <section class="wrap pb-10">
+    <SectionHeading title={browseTitle} />
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{browse.map((item) => <BrowseCard label={item.label} href={item.href} count={item.count} sample={item.sample} />)}</div>
+  </section>}
+
+  <section class="wrap"><SectionHeading title="Featured" />{lead ? <ArticleCard article={lead} variant="hero" /> : <p class="text-muted">No published articles in this section yet.</p>}</section>
+  {rest.length > 0 && <section class="wrap py-10"><SectionHeading title="Latest" /><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{rest.map(a=><ArticleCard article={a} />)}</div></section>}
+
+  {sections.filter(s => s.articles.length > 0).map((s) => (
+    <section class="wrap py-10 border-t border-line">
+      <SectionHeading title={s.label} href={s.href} label={s.href ? 'View all' : undefined} />
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{s.articles.slice(0, 6).map(a => <ArticleCard article={a} />)}</div>
+    </section>
+  ))}
+</BaseLayout>

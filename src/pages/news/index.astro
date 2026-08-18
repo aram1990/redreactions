@@ -1,0 +1,39 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleCard from '../../components/cards/ArticleCard.astro';
+import SectionHeading from '../../components/ui/SectionHeading.astro';
+import BrowseCard from '../../components/hub/BrowseCard.astro';
+import HubContext from '../../components/nav/HubContext.astro';
+import { getPublishedArticles } from '../../lib/articles';
+import { HUB_COUNTS, groupByMedium, splitLatestArchive } from '../../lib/taxonomy';
+
+const articles = await getPublishedArticles();
+const news = articles.filter(a => a.data.contentType === 'news');
+const { latest, archive } = splitLatestArchive(news, HUB_COUNTS.news);
+const [lead, ...restLatest] = latest;
+const byMedium = groupByMedium(news);
+// Below a size threshold this reads as "More News"; it relabels itself as an archive once volume grows.
+const archiveLabel = archive.length > HUB_COUNTS.news ? 'News Archive' : 'More News';
+---
+<HubContext label="News" />
+<BaseLayout title="News | Red Reactions" description="What happened, why it matters, and what comes next — the latest entertainment news across movies, TV, anime, comics and gaming.">
+  <section class="wrap py-10"><p class="eyebrow">Coverage</p><h1 class="display mt-2 text-5xl sm:text-6xl">News</h1><p class="mt-4 max-w-2xl text-muted">What happened, why it matters, and what comes next.</p></section>
+
+  <section class="wrap pb-10">
+    <SectionHeading title="Latest News" />
+    {lead ? <>
+      <ArticleCard article={lead} variant="hero" showNewsBadge />
+      {restLatest.length > 0 && <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{restLatest.map(a => <ArticleCard article={a} showNewsBadge />)}</div>}
+    </> : <p class="text-muted">No news has been published yet.</p>}
+  </section>
+
+  {byMedium.length > 0 && <section class="wrap pb-10 border-t border-line pt-10">
+    <SectionHeading title="Browse News" />
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byMedium.map(({ label, slug, articles: mediumArticles }) => <BrowseCard label={`${label} News`} href={`/news/${slug}/`} count={mediumArticles.length} sample={mediumArticles[0]} />)}</div>
+  </section>}
+
+  {archive.length > 0 && <section class="wrap py-10 border-t border-line">
+    <SectionHeading title={archiveLabel} />
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{archive.map(a => <ArticleCard article={a} showNewsBadge />)}</div>
+  </section>}
+</BaseLayout>

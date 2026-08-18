@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ReviewCard from '../../components/cards/ReviewCard.astro';
+import ArticleCard from '../../components/cards/ArticleCard.astro';
+import SectionHeading from '../../components/ui/SectionHeading.astro';
+import BrowseCard from '../../components/hub/BrowseCard.astro';
+import HubContext from '../../components/nav/HubContext.astro';
+import { getPublishedArticles } from '../../lib/articles';
+import { isReview } from '../../lib/reviews';
+import { HUB_COUNTS, groupByMedium, groupByFranchise, splitLatestArchive } from '../../lib/taxonomy';
+
+const articles = await getPublishedArticles();
+const reviews = articles.filter(a => isReview(a.data.rating));
+const { latest, archive } = splitLatestArchive(reviews, HUB_COUNTS.reviews);
+const [featured, ...restLatest] = latest;
+const byMedium = groupByMedium(reviews);
+const byFranchise = groupByFranchise(reviews);
+---
+<HubContext label="Reviews" />
+<BaseLayout title="Reviews | Red Reactions" description="Movies. TV. Games. Anime. No sugarcoating. Red Reactions' critical verdicts, scored and sorted by medium.">
+  <section class="wrap py-10"><p class="eyebrow">Coverage</p><h1 class="display mt-2 text-5xl sm:text-6xl">Reviews</h1><p class="mt-4 max-w-2xl text-muted">Critical takes without borrowed scoring systems — movies, TV, anime, comics and games, reviewed on their own terms.</p></section>
+
+  <section class="wrap pb-10">
+    <SectionHeading title="New Reviews" />
+    {featured ? <>
+      <ReviewCard article={featured} featured />
+      {restLatest.length > 0 && <div class="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">{restLatest.map(article => <ReviewCard {article} />)}</div>}
+    </> : <p class="text-muted">No reviews have been published yet.</p>}
+  </section>
+
+  {byMedium.length > 0 && <section class="wrap pb-10 border-t border-line pt-10">
+    <SectionHeading title="Browse Reviews" />
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byMedium.map(({ label, articles: mediumArticles, slug }) => <BrowseCard label={`${label} Reviews`} href={`/reviews/${slug}/`} count={mediumArticles.length} sample={mediumArticles[0]} />)}</div>
+  </section>}
+
+  {byFranchise.length > 0 && <section class="wrap pb-10 border-t border-line pt-10">
+    <SectionHeading title="Browse Reviews by Franchise" />
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byFranchise.map(({ franchise, path, articles: franchiseArticles }) => <BrowseCard label={franchise} href={path} count={franchiseArticles.length} sample={franchiseArticles[0]} />)}</div>
+  </section>}
+
+  {archive.length > 0 && <section class="wrap py-10 border-t border-line">
+    <SectionHeading title="Review Archive" />
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{archive.map(a => <ArticleCard article={a} variant="review" />)}</div>
+  </section>}
+</BaseLayout>

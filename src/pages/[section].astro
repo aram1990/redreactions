@@ -1,23 +1,18 @@
 ---
 import CategoryLayout from '../layouts/CategoryLayout.astro';
-import ReviewsLayout from '../layouts/ReviewsLayout.astro';
 import { getPublishedArticles, type Article } from '../lib/articles';
-import { isReview } from '../lib/reviews';
+import { mediumCoverageLinks } from '../lib/taxonomy';
 const sections = {
   movies:{title:'Movies',desc:'News, reviews and analysis from the big screen.',match:(a:Article)=>a.data.topics.includes('movies')},
   tv:{title:'TV & Streaming',desc:'The shows, finales and streaming worlds worth talking about.',match:(a:Article)=>a.data.topics.includes('tv')},
   anime:{title:'Anime',desc:'Anime coverage with context, criticism and enthusiasm.',match:(a:Article)=>a.data.topics.includes('anime')},
   comics:{title:'Comics',desc:'Panels, publishers and the stories behind the capes.',match:(a:Article)=>a.data.topics.includes('comics')},
   gaming:{title:'Gaming',desc:'Games, worlds and the culture around them.',match:(a:Article)=>a.data.topics.includes('gaming')},
-  trailers:{title:'Trailers',desc:'Official trailer coverage and sharp-eyed breakdowns.',match:(a:Article)=>a.data.contentType==='trailer'||Boolean(a.data.youtubeId)},
-  news:{title:'News',desc:'What happened, why it matters, and what comes next.',match:(a:Article)=>a.data.contentType==='news'},
-  reviews:{title:'Reviews',desc:'Critical takes without borrowed scoring systems.',match:(a:Article)=>isReview(a.data.rating)},
-  reactions:{title:'Reactions',desc:'First takes, video reactions and instant analysis.',match:(a:Article)=>a.data.contentType==='reaction'},
-  lore:{title:'Lore / Explained',desc:'Deep dives into characters, powers, timelines, worlds and the lore behind movies, TV, games, comics and anime.',match:(a:Article)=>a.data.contentType==='lore'}
 } as const;
-export async function getStaticPaths(){return ['movies','tv','anime','comics','gaming','trailers','news','reviews','reactions','lore'].map(section=>({params:{section}}));}
+export async function getStaticPaths(){return ['movies','tv','anime','comics','gaming'].map(section=>({params:{section}}));}
 const section=Astro.params.section as keyof typeof sections;
 const data=sections[section];
 const articles=(await getPublishedArticles()).filter(data.match);
+const browse = mediumCoverageLinks(articles, section).map(c => ({ label: c.label, href: c.href, count: c.articles.length, sample: c.articles[0] }));
 ---
-{section === 'reviews' ? <ReviewsLayout {articles} /> : <CategoryLayout title={data.title} description={data.desc} {articles} />}
+<CategoryLayout title={data.title} description={data.desc} {articles} {browse} browseTitle={`Browse ${data.title} Coverage`} />

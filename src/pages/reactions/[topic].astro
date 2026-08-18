@@ -1,0 +1,12 @@
+---
+import CategoryLayout from '../../layouts/CategoryLayout.astro';
+import { getPublishedArticles } from '../../lib/articles';
+import { groupByMedium } from '../../lib/taxonomy';
+
+export async function getStaticPaths() {
+  const reactions = (await getPublishedArticles()).filter(a => a.data.contentType === 'reaction');
+  return groupByMedium(reactions).map(({ slug, label, articles }) => ({ params: { topic: slug }, props: { label, articles } }));
+}
+const { label, articles } = Astro.props;
+---
+<CategoryLayout title={`${label} Reactions`} description={`${label} reactions and instant analysis from Red Reactions.`} {articles} />

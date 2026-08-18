@@ -12,5 +12,5 @@ export const site = {
 
 export const navItems = [
   ['Movies', '/movies/'], ['TV & Streaming', '/tv/'], ['Anime', '/anime/'], ['Comics', '/comics/'], ['Gaming', '/gaming/'],
-  ['Trailers', '/trailers/'], ['News', '/news/'], ['Reviews', '/reviews/'], ['Reactions', '/reactions/'], ['Lore', '/lore/'],
+  ['Trailers', '/trailers/'], ['News', '/news/'], ['Reviews', '/reviews/'], ['Reactions', '/reactions/'], ['Lore', '/lore/'], ['Explore', '/explore/'],
 ] as const;

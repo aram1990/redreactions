@@ -1,0 +1,12 @@
+---
+import CategoryLayout from '../../layouts/CategoryLayout.astro';
+import { getPublishedArticles } from '../../lib/articles';
+import { groupByMedium } from '../../lib/taxonomy';
+
+export async function getStaticPaths() {
+  const trailers = (await getPublishedArticles()).filter(a => a.data.contentType === 'trailer' || Boolean(a.data.youtubeId));
+  return groupByMedium(trailers).map(({ slug, label, articles }) => ({ params: { topic: slug }, props: { label, articles } }));
+}
+const { label, articles } = Astro.props;
+---
+<CategoryLayout title={`${label} Trailers`} description={`Official ${label.toLowerCase()} trailer coverage from Red Reactions.`} {articles} />

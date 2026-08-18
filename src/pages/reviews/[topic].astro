@@ -1,0 +1,13 @@
+---
+import CategoryLayout from '../../layouts/CategoryLayout.astro';
+import { getPublishedArticles } from '../../lib/articles';
+import { isReview } from '../../lib/reviews';
+import { groupByMedium } from '../../lib/taxonomy';
+
+export async function getStaticPaths() {
+  const reviews = (await getPublishedArticles()).filter(a => isReview(a.data.rating));
+  return groupByMedium(reviews).map(({ slug, label, articles }) => ({ params: { topic: slug }, props: { label, articles } }));
+}
+const { label, articles } = Astro.props;
+---
+<CategoryLayout title={`${label} Reviews`} description={`Red Reactions' ${label.toLowerCase()} reviews — critical verdicts, scored and explained.`} {articles} />

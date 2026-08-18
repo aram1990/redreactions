@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleCard from '../../components/cards/ArticleCard.astro';
+import SectionHeading from '../../components/ui/SectionHeading.astro';
+import BrowseCard from '../../components/hub/BrowseCard.astro';
+import HubContext from '../../components/nav/HubContext.astro';
+import { getPublishedArticles } from '../../lib/articles';
+import { HUB_COUNTS, groupByLoreCategory, groupByMedium, groupByFranchise, splitLatestArchive } from '../../lib/taxonomy';
+
+const articles = await getPublishedArticles();
+const lore = articles.filter(a => a.data.contentType === 'lore');
+const { latest, archive } = splitLatestArchive(lore, HUB_COUNTS.lore);
+const byCategory = groupByLoreCategory(lore);
+const byMedium = groupByMedium(lore);
+const byFranchise = groupByFranchise(lore);
+---
+<HubContext label="Lore &amp; Explained" />
+<BaseLayout title="Lore & Explained | Red Reactions" description="Deep dives into characters, origins, powers, timelines and the worlds behind movies, TV, games, anime and comics.">
+  <section class="wrap py-10"><p class="eyebrow">Coverage</p><h1 class="display mt-2 text-5xl sm:text-6xl">Lore &amp; Explained</h1><p class="mt-4 max-w-2xl text-muted">Deep dives into characters, origins, powers, timelines, worlds and the stories behind movies, TV, games, anime and comics.</p></section>
+
+  <section class="wrap pb-10">
+    <SectionHeading title="Latest Lore" />
+    {latest.length > 0 ? <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{latest.map(a => <ArticleCard article={a} />)}</div> : <p class="text-muted">No lore articles have been published yet.</p>}
+  </section>
+
+  {byCategory.length > 0 && <section class="wrap pb-10 border-t border-line pt-10">
+    <SectionHeading title="Browse Lore by Subject" />
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byCategory.map(({ label, path, articles: catArticles }) => <BrowseCard {label} href={path} count={catArticles.length} sample={catArticles[0]} />)}</div>
+  </section>}
+
+  {byMedium.length > 0 && <section class="wrap pb-10 border-t border-line pt-10">
+    <SectionHeading title="Browse Lore by Medium" />
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byMedium.map(({ label, slug, articles: mediumArticles }) => <BrowseCard label={`${label} Lore`} href={`/lore/${slug}/`} count={mediumArticles.length} sample={mediumArticles[0]} />)}</div>
+  </section>}
+
+  {byFranchise.length > 0 && <section class="wrap pb-10 border-t border-line pt-10">
+    <SectionHeading title="Explore Lore by Universe" />
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byFranchise.map(({ franchise, path, articles: franchiseArticles }) => <BrowseCard label={franchise} href={path} count={franchiseArticles.length} sample={franchiseArticles[0]} />)}</div>
+  </section>}
+
+  {archive.length > 0 && <section class="wrap py-10 border-t border-line">
+    <SectionHeading title="Lore Archive" />
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{archive.map(a => <ArticleCard article={a} />)}</div>
+  </section>}
+</BaseLayout>

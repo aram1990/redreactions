@@ -1,0 +1,33 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleCard from '../../components/cards/ArticleCard.astro';
+import SectionHeading from '../../components/ui/SectionHeading.astro';
+import BrowseCard from '../../components/hub/BrowseCard.astro';
+import HubContext from '../../components/nav/HubContext.astro';
+import { getPublishedArticles } from '../../lib/articles';
+import { HUB_COUNTS, groupByMedium, splitLatestArchive } from '../../lib/taxonomy';
+
+const articles = await getPublishedArticles();
+const reactions = articles.filter(a => a.data.contentType === 'reaction');
+const { latest, archive } = splitLatestArchive(reactions, HUB_COUNTS.reactions);
+const byMedium = groupByMedium(reactions);
+---
+<HubContext label="Reactions" />
+<BaseLayout title="Reactions | Red Reactions" description="First takes, video reactions and instant analysis across movies, TV, anime, comics and gaming.">
+  <section class="wrap py-10"><p class="eyebrow">Coverage</p><h1 class="display mt-2 text-5xl sm:text-6xl">Reactions</h1><p class="mt-4 max-w-2xl text-muted">First takes, video reactions and instant analysis.</p></section>
+
+  <section class="wrap pb-10">
+    <SectionHeading title="Latest Reactions" />
+    {latest.length > 0 ? <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{latest.map(a => <ArticleCard article={a} variant="video" />)}</div> : <p class="text-muted">Reactions coverage is coming soon — check back shortly, or explore <a class="text-red underline" href="/reviews/">Reviews</a> and <a class="text-red underline" href="/lore/">Lore &amp; Explained</a> in the meantime.</p>}
+  </section>
+
+  {byMedium.length > 0 && <section class="wrap pb-10 border-t border-line pt-10">
+    <SectionHeading title="Browse Reactions" />
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byMedium.map(({ label, slug, articles: mediumArticles }) => <BrowseCard label={`${label} Reactions`} href={`/reactions/${slug}/`} count={mediumArticles.length} sample={mediumArticles[0]} />)}</div>
+  </section>}
+
+  {archive.length > 0 && <section class="wrap py-10 border-t border-line">
+    <SectionHeading title="More Reactions" />
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{archive.map(a => <ArticleCard article={a} variant="video" />)}</div>
+  </section>}
+</BaseLayout>
