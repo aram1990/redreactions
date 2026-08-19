@@ -1,6 +1,9 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 export type Article = CollectionEntry<'articles'>;
-export async function getPublishedArticles() { return (await getCollection('articles', ({ data }) => !data.draft)).sort((a,b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf()); }
+// Sorted newest-first by publishedAt. Articles sharing the same date (publishedAt has no time
+// component) fall back to a deterministic id comparison so ordering never depends on filesystem/
+// glob read order. This is a stopgap until real publication timestamps exist.
+export async function getPublishedArticles() { return (await getCollection('articles', ({ data }) => !data.draft)).sort((a,b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf() || a.id.localeCompare(b.id)); }
 export function articleSlug(article: Article) { return (article.data.slug || article.id).replace(/\.mdx$/, ''); }
 export function articlePath(article: Article) { return `/articles/${articleSlug(article)}/`; }
 export function tagSlug(tag: string) { return tag.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }

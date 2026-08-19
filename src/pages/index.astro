@@ -8,8 +8,10 @@ import { isReview } from '../lib/reviews';
 
 const articles = await getPublishedArticles();
 const newsArticles = articles.filter(a => a.data.contentType === 'news');
-const featuredNews = newsArticles.filter(a => a.data.featured);
-const newsLead = featuredNews[0] || newsArticles[0] || articles[0];
+// Fresh first: the hero is always the newest published NewsArticle (articles are already sorted
+// newest-first). `featured` intentionally does not override this, so no story stays pinned once
+// something newer publishes — it only affects the separate "Featured & Must Read" section below.
+const newsLead = newsArticles[0] || articles[0];
 const secondaryNews = newsArticles.filter(a => a.id !== newsLead?.id).slice(0, 5);
 const trending = articles.filter(a => a.data.trending);
 const trendingStories = trending.filter(a => a.id !== newsLead?.id);
