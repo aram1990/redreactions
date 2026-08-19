@@ -12,7 +12,7 @@ const newsArticles = articles.filter(a => a.data.contentType === 'news');
 // newest-first). `featured` intentionally does not override this, so no story stays pinned once
 // something newer publishes — it only affects the separate "Featured & Must Read" section below.
 const newsLead = newsArticles[0] || articles[0];
-const secondaryNews = newsArticles.filter(a => a.id !== newsLead?.id).slice(0, 5);
+const secondaryNews = newsArticles.filter(a => a.id !== newsLead?.id).slice(0, 6);
 const trending = articles.filter(a => a.data.trending);
 const trendingStories = trending.filter(a => a.id !== newsLead?.id);
 const loreArticles = articles.filter(a => a.data.contentType === 'lore');
