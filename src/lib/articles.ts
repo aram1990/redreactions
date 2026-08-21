@@ -6,6 +6,8 @@ export async function getPublishedArticles() { return (await getCollection('arti
 export function articleSlug(article: Article) { return (article.data.slug || article.id).replace(/\.mdx$/, ''); }
 export function articlePath(article: Article) { return `/articles/${articleSlug(article)}/`; }
 export function tagSlug(tag: string) { return tag.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+export function authorSlug(author: string) { return tagSlug(author); }
+export function authorPath(author: string) { return `/author/${authorSlug(author)}/`; }
 export function franchiseSlug(franchise: string) { return franchise.toLowerCase().replaceAll(' ', '-'); }
 export function franchisePath(franchise: string) { return `/franchise/${franchiseSlug(franchise)}/`; }
 export function genreLabel(genre: string) { return genre === 'sci-fi' ? 'Sci-Fi' : genre.replace(/\b\w/g, letter => letter.toUpperCase()); }

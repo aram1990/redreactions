@@ -1,11 +1,12 @@
 import type { APIRoute } from 'astro';
-import { getPublishedArticles, articlePath, franchisePath, genrePath } from '../lib/articles';
+import { getPublishedArticles, articlePath, authorPath, franchisePath, genrePath } from '../lib/articles';
 import { isReview } from '../lib/reviews';
 import { groupByLoreCategory, groupByMedium } from '../lib/taxonomy';
 import { site } from '../config/site';
-const staticPaths = ['/', '/explore/', '/movies/', '/tv/', '/anime/', '/comics/', '/gaming/', '/trailers/', '/news/', '/reviews/', '/reactions/', '/lore/', '/about/', '/contact/', '/privacy/', '/cookies/', '/terms/', '/editorial-policy/', '/copyright/', '/search/'];
+const staticPaths = ['/', '/explore/', '/movies/', '/tv/', '/anime/', '/comics/', '/gaming/', '/trailers/', '/news/', '/reviews/', '/reactions/', '/lore/', '/about/', '/authors/', '/contact/', '/privacy/', '/cookies/', '/terms/', '/editorial-policy/', '/copyright/', '/search/'];
 export const GET: APIRoute = async () => {
   const articles = await getPublishedArticles();
+  const authorPaths = [...new Set(articles.map(article => article.data.author))].map(author => authorPath(author));
   const franchisePaths = [...new Set(articles.map(article => article.data.franchise).filter(Boolean) as string[])].map(franchise => franchisePath(franchise));
   const genrePaths = [...new Set(articles.flatMap(article => article.data.genres))].map(genre => genrePath(genre));
   const reviewPaths = groupByMedium(articles.filter(a => isReview(a.data.rating))).map(g => `/reviews/${g.slug}/`);
@@ -18,6 +19,7 @@ export const GET: APIRoute = async () => {
   const reactionPaths = groupByMedium(articles.filter(a => a.data.contentType === 'reaction')).map(g => `/reactions/${g.slug}/`);
   const urls: { path: string; lastmod?: string }[] = [
     ...staticPaths.map(path => ({ path })),
+    ...authorPaths.map(path => ({ path })),
     ...franchisePaths.map(path => ({ path })),
     ...genrePaths.map(path => ({ path })),
     ...reviewPaths.map(path => ({ path })),

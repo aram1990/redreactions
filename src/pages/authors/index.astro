@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { authorPath, getPublishedArticles } from '../../lib/articles';
+
+const articles = await getPublishedArticles();
+const authors = [...new Set(articles.map(article => article.data.author))]
+  .map(author => ({ author, count: articles.filter(article => article.data.author === author).length }))
+  .sort((a, b) => a.author.localeCompare(b.author));
+---
+<BaseLayout title="Our Writers | Red Reactions" description="Meet the writers behind Red Reactions.">
+  <section class="wrap py-12 md:py-16">
+    <p class="eyebrow">Red Reactions</p>
+    <h1 class="display mt-2 text-5xl sm:text-6xl">Our Writers</h1>
+    <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {authors.map(({ author, count }) => <a class="card p-5 transition hover:border-red" href={authorPath(author)}><h2 class="display text-2xl">{author}</h2><p class="mt-2 text-sm text-muted">{count} {count === 1 ? 'published article' : 'published articles'}</p></a>)}
+    </div>
+  </section>
+</BaseLayout>
