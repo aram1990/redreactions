@@ -16,10 +16,8 @@ export const GET: APIRoute = async () => {
   ];
   const newsPaths = groupByMedium(articles.filter(a => a.data.contentType === 'news')).map(g => `/news/${g.slug}/`);
   const trailerPaths = groupByMedium(articles.filter(a => a.data.contentType === 'trailer' || Boolean(a.data.youtubeId))).map(g => `/trailers/${g.slug}/`);
-  const reactionPaths = groupByMedium(articles.filter(a => a.data.contentType === 'reaction')).map(g => `/reactions/${g.slug}/`);
   const urls: { path: string; lastmod?: string }[] = [
     ...staticPaths.map(path => ({ path })),
-    ...(articles.some(article => article.data.contentType === 'reaction') ? [{ path: '/reactions/' }] : []),
     ...authorPaths.map(path => ({ path })),
     ...franchisePaths.map(path => ({ path })),
     ...genrePaths.map(path => ({ path })),
@@ -27,7 +25,6 @@ export const GET: APIRoute = async () => {
     ...lorePaths.map(path => ({ path })),
     ...newsPaths.map(path => ({ path })),
     ...trailerPaths.map(path => ({ path })),
-    ...reactionPaths.map(path => ({ path })),
     ...articles.map(article => ({ path: articlePath(article), lastmod: (article.data.updatedAt || article.data.publishedAt).toISOString() })),
   ];
   const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map(({ path, lastmod }) => `<url><loc>${new URL(path, site.url).href}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}</url>`).join('')}</urlset>`;

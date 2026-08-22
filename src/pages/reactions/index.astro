@@ -9,6 +9,7 @@ import { HUB_COUNTS, groupByMedium, splitLatestArchive } from '../../lib/taxonom
 
 const articles = await getPublishedArticles();
 const reactions = articles.filter(a => a.data.contentType === 'reaction');
+if (reactions.length === 0) return Astro.redirect('/explore/', 302);
 const { latest, archive } = splitLatestArchive(reactions, HUB_COUNTS.reactions);
 const byMedium = groupByMedium(reactions);
 ---
