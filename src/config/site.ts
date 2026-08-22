@@ -7,10 +7,10 @@ export const site = {
   contactEmail: 'real.redreactions@gmail.com',
   adsenseClient: import.meta.env.PUBLIC_ADSENSE_CLIENT || '',
   defaultImage: '/images/articles/spider-man-brand-new-day-box-office.webp',
-  social: { youtube: '#', tiktok: '#', instagram: '#', facebook: '#', twitch: '#', kick: '#', x: '#' },
+  social: { x: 'https://x.com/arre90', tiktok: 'https://www.tiktok.com/@red.reactions', youtube: 'https://www.youtube.com/@TheRedXNerd', instagram: 'https://www.instagram.com/red_reactions/', kick: 'https://kick.com/redreactions', twitch: 'https://www.twitch.tv/redreactionsx' },
 } as const;
 
 export const navItems = [
   ['Movies', '/movies/'], ['TV & Streaming', '/tv/'], ['Anime', '/anime/'], ['Comics', '/comics/'], ['Gaming', '/gaming/'],
-  ['Trailers', '/trailers/'], ['News', '/news/'], ['Reviews', '/reviews/'], ['Reactions', '/reactions/'], ['Lore', '/lore/'], ['Explore', '/explore/'],
+  ['Trailers', '/trailers/'], ['News', '/news/'], ['Reviews', '/reviews/'], ['Lore', '/lore/'], ['Explore', '/explore/'],
 ] as const;

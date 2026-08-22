@@ -1,23 +1,25 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ArticleCard from '../../components/cards/ArticleCard.astro';
-import { authorSlug, getPublishedArticles, type Article } from '../../lib/articles';
+import { authorDisplayName, authorProfile, authorSlug, getPublishedArticles, type Article } from '../../lib/articles';
 
 export async function getStaticPaths() {
   const articles = await getPublishedArticles();
-  return [...new Set(articles.map(article => article.data.author))].map(author => ({
+  return [...new Set(articles.map(article => authorDisplayName(article.data.author)))].map(author => ({
     params: { slug: authorSlug(author) },
-    props: { author, articles: articles.filter(article => article.data.author === author) },
+    props: { author, articles: articles.filter(article => authorDisplayName(article.data.author) === author) },
   }));
 }
 
 const { author, articles } = Astro.props as { author: string; articles: Article[] };
+const profile = authorProfile(author);
 ---
 <BaseLayout title={`${author} | Red Reactions`} description={`Articles by ${author} at Red Reactions.`}>
   <section class="wrap py-12 md:py-16">
     <p class="eyebrow">Our Writers</p>
     <h1 class="display mt-2 text-5xl sm:text-6xl">{author}</h1>
-    <p class="mt-3 text-sm text-muted">{articles.length} {articles.length === 1 ? 'published article' : 'published articles'}</p>
+    {profile && <><p class="mt-3 text-sm font-bold text-red">{profile.role}</p><p class="mt-4 max-w-3xl text-base leading-relaxed text-muted">{profile.bio}</p><p class="mt-4 text-xs font-bold uppercase tracking-wide text-muted">Coverage: {profile.coverage.join(' · ')}</p></>}
+    <p class="mt-5 text-sm text-muted">{articles.length} {articles.length === 1 ? 'published article' : 'published articles'}</p>
     <div class="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {articles.map(article => <ArticleCard article={article} />)}
     </div>

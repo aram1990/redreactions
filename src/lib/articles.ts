@@ -1,4 +1,5 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
+import { getAuthorProfile } from '../config/authors';
 export type Article = CollectionEntry<'articles'>;
 // Sorted newest-first by publishedAt. Full ISO timestamps preserve the real order of articles
 // published on the same calendar day; date-only values remain valid for older content.
@@ -6,7 +7,9 @@ export async function getPublishedArticles() { return (await getCollection('arti
 export function articleSlug(article: Article) { return (article.data.slug || article.id).replace(/\.mdx$/, ''); }
 export function articlePath(article: Article) { return `/articles/${articleSlug(article)}/`; }
 export function tagSlug(tag: string) { return tag.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
-export function authorSlug(author: string) { return tagSlug(author); }
+export function authorSlug(author: string) { return getAuthorProfile(author)?.slug || tagSlug(author); }
+export function authorDisplayName(author: string) { return getAuthorProfile(author)?.name || author; }
+export function authorProfile(author: string) { return getAuthorProfile(author); }
 export function authorPath(author: string) { return `/author/${authorSlug(author)}/`; }
 export function franchiseSlug(franchise: string) { return franchise.toLowerCase().replaceAll(' ', '-'); }
 export function franchisePath(franchise: string) { return `/franchise/${franchiseSlug(franchise)}/`; }

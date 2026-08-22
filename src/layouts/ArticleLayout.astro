@@ -1,7 +1,7 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import type { Article } from '../lib/articles';
-import { articlePath, authorPath, franchisePath, genreLabel, genrePath, readingTime, tagSlug } from '../lib/articles';
+import { articlePath, authorDisplayName, authorPath, authorProfile, franchisePath, genreLabel, genrePath, readingTime, tagSlug } from '../lib/articles';
 import ArticleCard from '../components/cards/ArticleCard.astro';
 import YouTube from '../components/video/YouTube.astro';
 import ReviewScore from '../components/review/ReviewScore.astro';
@@ -14,6 +14,8 @@ import { loreCategoryLabel, loreCategoryPath, mediumLabel } from '../lib/taxonom
 interface Props { article: Article; headings: { depth:number; slug:string; text:string }[]; related: Article[]; previous?: Article; next?: Article; }
 const { article, headings, related, previous, next } = Astro.props;
 const d = article.data;
+const author = authorDisplayName(d.author);
+const profile = authorProfile(d.author);
 const url = new URL(articlePath(article), site.url).href;
 const authorUrl = new URL(authorPath(d.author), site.url).href;
 const review = isReview(d.rating);
@@ -41,12 +43,12 @@ const videoJsonLd = d.youtubeId && d.youtubeUploadDate && d.youtubeThumbnailUrl 
 const articleJsonLd = {
     '@type': d.contentType === 'news' ? 'NewsArticle' : 'Article',
     headline: d.title, description: d.description, datePublished: d.publishedAt.toISOString(), dateModified: (d.updatedAt || d.publishedAt).toISOString(),
-    author: { '@type': 'Person', name: d.author, url: authorUrl }, publisher, image: new URL(d.heroImage, site.url).href,
+    author: { '@type': 'Person', name: author, url: authorUrl }, publisher, image: new URL(d.heroImage, site.url).href,
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
     ...(videoJsonLd ? { video: videoJsonLd } : {}),
   };
 const reviewJsonLd = review && d.reviewedItem ? {
-  '@type': 'Review', author: { '@type': 'Person', name: d.author }, datePublished: d.publishedAt.toISOString(),
+  '@type': 'Review', author: { '@type': 'Person', name: author, url: authorUrl }, datePublished: d.publishedAt.toISOString(),
   itemReviewed: {
     '@type': d.reviewedItem.type, name: d.reviewedItem.name,
     ...(d.reviewedItem.type === 'TVEpisode' && d.reviewedItem.episodeNumber ? { episodeNumber: d.reviewedItem.episodeNumber } : {}),
@@ -73,7 +75,7 @@ const jsonLd = { '@context': 'https://schema.org', '@graph': [publisher, article
       <div class="flex flex-wrap items-center gap-2"><p class="eyebrow">{review ? `${reviewTopicLabel(d.topics[0]!)} Review` : `${d.contentType} · ${d.topics.join(' / ')}`}</p>{review && d.spoilerLevel && <span class="border border-amber-400 bg-amber-50 px-2 py-1 text-[.62rem] font-extrabold uppercase tracking-[.11em] text-amber-900">{d.spoilerLevel}</span>}</div>
       <h1 class="display mt-3 text-4xl leading-none sm:text-6xl">{d.title}</h1>
       <p class="mt-5 max-w-3xl text-lg leading-relaxed text-muted">{d.description}</p>
-      <div class="mt-6 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted"><span>By <a class="font-bold text-paper hover:text-red" href={authorPath(d.author)}>{d.author}</a></span><time datetime={d.publishedAt.toISOString()}>Published {formatDate(d.publishedAt)}</time>{wasUpdated && d.updatedAt && <time datetime={d.updatedAt.toISOString()}>Updated {formatDate(d.updatedAt)}</time>}<span>{readingTime(article.body || '')} min read</span></div>
+      <div class="mt-6 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted"><span>By <a class="font-bold text-paper hover:text-red" href={authorPath(d.author)}>{author}</a></span><time datetime={d.publishedAt.toISOString()}>Published {formatDate(d.publishedAt)}</time>{wasUpdated && d.updatedAt && <time datetime={d.updatedAt.toISOString()}>Updated {formatDate(d.updatedAt)}</time>}<span>{readingTime(article.body || '')} min read</span></div>
       {filedUnder.length > 0 && <div class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted"><span class="eyebrow">Filed under</span>{filedUnder.map((item, i) => <>{i > 0 && <span>·</span>}<a class="font-bold text-paper hover:text-red" href={item.href}>{item.label}</a></>)}</div>}
       {review && <ReviewScore rating={d.rating!} />}
     </header>
@@ -93,7 +95,7 @@ const jsonLd = { '@context': 'https://schema.org', '@graph': [publisher, article
     </div>
     <section class="mx-auto mt-16 max-w-5xl"><h2 class="display mb-5 text-3xl">Related coverage</h2><div class="grid gap-4 md:grid-cols-2">{related.map(a => <ArticleCard article={a} />)}</div></section>
     <section class="mx-auto mt-10 grid max-w-5xl gap-4 border-t border-line pt-6 sm:grid-cols-2">{previous && <a class="card p-4 text-sm" href={articlePath(previous)}><span class="eyebrow">Previous</span><b class="mt-2 block">{previous.data.title}</b></a>}{next && <a class="card p-4 text-right text-sm" href={articlePath(next)}><span class="eyebrow">Next</span><b class="mt-2 block">{next.data.title}</b></a>}</section>
-    <section class="mx-auto mt-10 max-w-5xl border-t border-line pt-6"><p class="eyebrow">About the author</p><h2 class="display mt-2 text-2xl">{d.author}</h2><p class="mt-2 max-w-xl text-sm text-muted">Independent commentary and editorial analysis from the Red Reactions team.</p></section>
+    <section class="mx-auto mt-10 max-w-5xl border-t border-line pt-6"><p class="eyebrow">About the author</p><h2 class="display mt-2 text-2xl"><a href={authorPath(d.author)}>{author}</a></h2>{profile && <p class="mt-2 text-sm font-bold text-red">{profile.role}</p>}<p class="mt-2 max-w-xl text-sm text-muted">{profile?.bio || 'Independent commentary and editorial analysis from the Red Reactions team.'}</p></section>
   </article>
   <script>document.querySelector('[data-copy-link]')?.addEventListener('click', async (event) => { const el = event.currentTarget as HTMLButtonElement; await navigator.clipboard?.writeText(el.dataset.copyLink || ''); el.textContent = 'Copied'; });</script>
 </BaseLayout>
