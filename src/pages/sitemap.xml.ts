@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getPublishedArticles, articlePath, authorPath, franchisePath, genrePath } from '../lib/articles';
+import { getPublishedArticles, articlePath, authorPath, franchisePath, genrePath, tagSlug } from '../lib/articles';
 import { isReview } from '../lib/reviews';
 import { groupByLoreCategory, groupByMedium } from '../lib/taxonomy';
 import { site } from '../config/site';
@@ -9,6 +9,14 @@ export const GET: APIRoute = async () => {
   const authorPaths = [...new Set(articles.map(article => authorPath(article.data.author)))];
   const franchisePaths = [...new Set(articles.map(article => article.data.franchise).filter(Boolean) as string[])].map(franchise => franchisePath(franchise));
   const genrePaths = [...new Set(articles.flatMap(article => article.data.genres))].map(genre => genrePath(genre));
+  const tagGroups = new Map<string, string[]>();
+  for (const tag of [...new Set(articles.flatMap(article => article.data.tags))]) {
+    const slug = tagSlug(tag);
+    tagGroups.set(slug, [...(tagGroups.get(slug) ?? []), tag]);
+  }
+  const tagPaths = [...tagGroups]
+    .filter(([, tags]) => articles.filter(article => article.data.tags.some(tag => tags.includes(tag))).length >= 2)
+    .map(([slug]) => `/tag/${slug}/`);
   const reviewPaths = groupByMedium(articles.filter(a => isReview(a.data.rating))).map(g => `/reviews/${g.slug}/`);
   const lorePaths = [
     ...groupByLoreCategory(articles.filter(a => a.data.contentType === 'lore')).map(g => g.path),
@@ -21,6 +29,7 @@ export const GET: APIRoute = async () => {
     ...authorPaths.map(path => ({ path })),
     ...franchisePaths.map(path => ({ path })),
     ...genrePaths.map(path => ({ path })),
+    ...tagPaths.map(path => ({ path })),
     ...reviewPaths.map(path => ({ path })),
     ...lorePaths.map(path => ({ path })),
     ...newsPaths.map(path => ({ path })),
