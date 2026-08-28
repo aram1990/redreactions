@@ -6,5 +6,6 @@ dist/
 !.env.example
 .wrangler/
 *.log
+newsroom/.run-output.json
 
 **/SOURCES-AND-PLACEMENT.txt
