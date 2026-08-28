@@ -7,8 +7,7 @@
     "dev": "astro dev",
     "build": "astro check && astro build",
     "preview": "astro preview",
-    "check": "astro check",
-    "newsroom": "node scripts/newsroom/run.mjs"
+    "check": "astro check"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.5",
