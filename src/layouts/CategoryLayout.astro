@@ -6,29 +6,38 @@ import BrowseCard from '../components/hub/BrowseCard.astro';
 import HubContext from '../components/nav/HubContext.astro';
 import type { Article } from '../lib/articles';
 
-interface BrowseItem { label: string; href: string; count: number; sample?: Article; }
+interface BrowseItem { label: string; href: string; count: number; }
 interface CoverageSection { label: string; href?: string; articles: Article[]; }
 interface Props {
   title: string; description: string; articles: Article[];
   browse?: BrowseItem[]; browseTitle?: string;
   sections?: CoverageSection[];
+  noindex?: boolean;
 }
-const { title, description, articles, browse = [], browseTitle = 'Browse', sections = [] } = Astro.props;
+const { title, description, articles, browse = [], browseTitle = 'Browse', sections = [], noindex = false } = Astro.props;
 const [lead, ...rest] = articles;
+// Articles may belong to several coverage types. Reserve the primary list first, then only render
+// a story in the first supplementary section where it appears.
+const displayedArticleIds = new Set(articles.map(article => article.id));
+const uniqueSections = sections.map((section) => {
+  const uniqueArticles = section.articles.filter(article => !displayedArticleIds.has(article.id)).slice(0, 6);
+  uniqueArticles.forEach(article => displayedArticleIds.add(article.id));
+  return { ...section, articles: uniqueArticles };
+}).filter(section => section.articles.length > 0);
 ---
 <HubContext label={title} />
-<BaseLayout title={`${title} | Red Reactions`} description={description}>
+<BaseLayout title={`${title} | Red Reactions`} description={description} {noindex}>
   <section class="wrap py-10"><p class="eyebrow">Coverage</p><h1 class="display mt-2 text-5xl sm:text-6xl">{title}</h1><p class="mt-4 max-w-2xl text-muted">{description}</p></section>
 
   {browse.length > 0 && <section class="wrap pb-10">
     <SectionHeading title={browseTitle} />
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{browse.map((item) => <BrowseCard label={item.label} href={item.href} count={item.count} sample={item.sample} />)}</div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{browse.map((item) => <BrowseCard label={item.label} href={item.href} count={item.count} />)}</div>
   </section>}
 
   <section class="wrap"><SectionHeading title="Featured" />{lead ? <ArticleCard article={lead} variant="hero" /> : <p class="text-muted">No published articles in this section yet.</p>}</section>
   {rest.length > 0 && <section class="wrap py-10"><SectionHeading title="Latest" /><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{rest.map(a=><ArticleCard article={a} />)}</div></section>}
 
-  {sections.filter(s => s.articles.length > 0).map((s) => (
+  {uniqueSections.map((s) => (
     <section class="wrap py-10 border-t border-line">
       <SectionHeading title={s.label} href={s.href} label={s.href ? 'View all' : undefined} />
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{s.articles.slice(0, 6).map(a => <ArticleCard article={a} />)}</div>

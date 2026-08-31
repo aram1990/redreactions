@@ -8,7 +8,7 @@ import { getPublishedArticles } from '../../lib/articles';
 import { HUB_COUNTS, groupByMedium, splitLatestArchive } from '../../lib/taxonomy';
 
 const articles = await getPublishedArticles();
-const trailers = articles.filter(a => a.data.contentType === 'trailer' || Boolean(a.data.youtubeId));
+const trailers = articles.filter(a => a.data.contentType === 'trailer');
 const { latest, archive } = splitLatestArchive(trailers, HUB_COUNTS.trailers);
 const byMedium = groupByMedium(trailers);
 ---
@@ -23,7 +23,7 @@ const byMedium = groupByMedium(trailers);
 
   {byMedium.length > 0 && <section class="wrap pb-10 border-t border-line pt-10">
     <SectionHeading title="Browse Trailers" />
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byMedium.map(({ label, slug, articles: mediumArticles }) => <BrowseCard label={`${label} Trailers`} href={`/trailers/${slug}/`} count={mediumArticles.length} sample={mediumArticles[0]} />)}</div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byMedium.map(({ label, slug, articles: mediumArticles }) => <BrowseCard label={`${label} Trailers`} href={`/trailers/${slug}/`} count={mediumArticles.length} />)}</div>
   </section>}
 
   {archive.length > 0 && <section class="wrap py-10 border-t border-line">

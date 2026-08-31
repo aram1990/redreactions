@@ -29,7 +29,7 @@ const archiveLabel = archive.length > HUB_COUNTS.news ? 'News Archive' : 'More N
 
   {byMedium.length > 0 && <section class="wrap pb-10 border-t border-line pt-10">
     <SectionHeading title="Browse News" />
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byMedium.map(({ label, slug, articles: mediumArticles }) => <BrowseCard label={`${label} News`} href={`/news/${slug}/`} count={mediumArticles.length} sample={mediumArticles[0]} />)}</div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byMedium.map(({ label, slug, articles: mediumArticles }) => <BrowseCard label={`${label} News`} href={`/news/${slug}/`} count={mediumArticles.length} />)}</div>
   </section>}
 
   {archive.length > 0 && <section class="wrap py-10 border-t border-line">

@@ -13,6 +13,13 @@ export function authorProfile(author: string) { return getAuthorProfile(author);
 export function authorPath(author: string) { return `/author/${authorSlug(author)}/`; }
 export function franchiseSlug(franchise: string) { return franchise.toLowerCase().replaceAll(' ', '-'); }
 export function franchisePath(franchise: string) { return `/franchise/${franchiseSlug(franchise)}/`; }
+// Keep legacy franchise route slugs stable while presenting readable public labels.
+const FRANCHISE_LABELS: Record<string, string> = {
+  'the-witcher': 'The Witcher',
+  'evil-dead': 'Evil Dead',
+  'Marvels Wolverine': "Marvel's Wolverine",
+};
+export function franchiseLabel(franchise: string) { return FRANCHISE_LABELS[franchise] ?? franchise; }
 export function genreLabel(genre: string) { return genre === 'sci-fi' ? 'Sci-Fi' : genre.replace(/\b\w/g, letter => letter.toUpperCase()); }
 export function genrePath(genre: string) { return `/genre/${genre}/`; }
 export function topicPath(topic: string) { return `/${topic === 'tv' ? 'tv' : topic}/`; }

@@ -1,10 +1,8 @@
 ---
-import type { Article } from '../../lib/articles';
-interface Props { label: string; href: string; count: number; sample?: Article; eyebrow?: string; }
-const { label, href, count, sample, eyebrow = `${count} ${count === 1 ? 'article' : 'articles'}` } = Astro.props;
+interface Props { label: string; href: string; count: number; eyebrow?: string; }
+const { label, href, count, eyebrow = `${count} ${count === 1 ? 'article' : 'articles'}` } = Astro.props;
 ---
 <a class="card block p-5 transition hover:border-red" href={href}>
   <p class="eyebrow">{eyebrow}</p>
   <h3 class="display mt-2 text-2xl">{label}</h3>
-  {sample && <p class="mt-3 truncate text-sm font-bold text-paper">{sample.data.title}</p>}
 </a>

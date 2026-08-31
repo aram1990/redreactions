@@ -30,12 +30,12 @@ const byFranchise = groupByFranchise(reviews);
 
   {byMedium.length > 0 && <section class="wrap pb-10 border-t border-line pt-10">
     <SectionHeading title="Browse Reviews" />
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byMedium.map(({ label, articles: mediumArticles, slug }) => <BrowseCard label={`${label} Reviews`} href={`/reviews/${slug}/`} count={mediumArticles.length} sample={mediumArticles[0]} />)}</div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byMedium.map(({ label, articles: mediumArticles, slug }) => <BrowseCard label={`${label} Reviews`} href={`/reviews/${slug}/`} count={mediumArticles.length} />)}</div>
   </section>}
 
   {byFranchise.length > 0 && <section class="wrap pb-10 border-t border-line pt-10">
     <SectionHeading title="Browse Reviews by Franchise" />
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byFranchise.map(({ franchise, path, articles: franchiseArticles }) => <BrowseCard label={franchise} href={path} count={franchiseArticles.length} sample={franchiseArticles[0]} />)}</div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byFranchise.map(({ label, path, articles: franchiseArticles }) => <BrowseCard {label} href={path} count={franchiseArticles.length} />)}</div>
   </section>}
 
   {archive.length > 0 && <section class="wrap py-10 border-t border-line">

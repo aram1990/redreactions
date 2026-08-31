@@ -1,18 +1,18 @@
 ---
 import CategoryLayout from '../../layouts/CategoryLayout.astro';
 import { getPublishedArticles } from '../../lib/articles';
-import { groupByLoreCategory, groupByMedium } from '../../lib/taxonomy';
+import { LORE_CATEGORIES, MEDIUMS, MIN_ROUTE_ARTICLES } from '../../lib/taxonomy';
 
 export async function getStaticPaths() {
   const lore = (await getPublishedArticles()).filter(a => a.data.contentType === 'lore');
-  const categoryPaths = groupByLoreCategory(lore).map(({ slug, label, articles }) => ({
+  const categoryPaths = LORE_CATEGORIES.map(({ slug, label }) => ({ slug, label, articles: lore.filter(article => article.data.loreCategory === slug) })).map(({ slug, label, articles }) => ({
     params: { key: slug }, props: { title: label, description: `${label} explained — lore deep dives from Red Reactions.`, articles },
   }));
-  const mediumPaths = groupByMedium(lore).map(({ slug, label, articles }) => ({
+  const mediumPaths = MEDIUMS.map(({ slug, label }) => ({ slug, label, articles: lore.filter(article => article.data.topics.includes(slug)) })).filter(({ articles }) => articles.length > 0).map(({ slug, label, articles }) => ({
     params: { key: slug }, props: { title: `${label} Lore`, description: `${label} characters, origins, powers and worlds, explained.`, articles },
   }));
   return [...categoryPaths, ...mediumPaths];
 }
 const { title, description, articles } = Astro.props;
 ---
-<CategoryLayout {title} {description} {articles} />
+<CategoryLayout {title} {description} {articles} noindex={articles.length < MIN_ROUTE_ARTICLES} />

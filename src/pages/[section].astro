@@ -13,6 +13,6 @@ export async function getStaticPaths(){return ['movies','tv','anime','comics','g
 const section=Astro.params.section as keyof typeof sections;
 const data=sections[section];
 const articles=(await getPublishedArticles()).filter(data.match);
-const browse = mediumCoverageLinks(articles, section).map(c => ({ label: c.label, href: c.href, count: c.articles.length, sample: c.articles[0] }));
+const browse = mediumCoverageLinks(articles, section).map(c => ({ label: c.label, href: c.href, count: c.articles.length }));
 ---
 <CategoryLayout title={data.title} description={data.desc} {articles} {browse} browseTitle={`Browse ${data.title} Coverage`} />

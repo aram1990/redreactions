@@ -25,17 +25,17 @@ const byFranchise = groupByFranchise(lore);
 
   {byCategory.length > 0 && <section class="wrap pb-10 border-t border-line pt-10">
     <SectionHeading title="Browse Lore by Subject" />
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byCategory.map(({ label, path, articles: catArticles }) => <BrowseCard {label} href={path} count={catArticles.length} sample={catArticles[0]} />)}</div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byCategory.map(({ label, path, articles: catArticles }) => <BrowseCard {label} href={path} count={catArticles.length} />)}</div>
   </section>}
 
   {byMedium.length > 0 && <section class="wrap pb-10 border-t border-line pt-10">
     <SectionHeading title="Browse Lore by Medium" />
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byMedium.map(({ label, slug, articles: mediumArticles }) => <BrowseCard label={`${label} Lore`} href={`/lore/${slug}/`} count={mediumArticles.length} sample={mediumArticles[0]} />)}</div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byMedium.map(({ label, slug, articles: mediumArticles }) => <BrowseCard label={`${label} Lore`} href={`/lore/${slug}/`} count={mediumArticles.length} />)}</div>
   </section>}
 
   {byFranchise.length > 0 && <section class="wrap pb-10 border-t border-line pt-10">
     <SectionHeading title="Explore Lore by Universe" />
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byFranchise.map(({ franchise, path, articles: franchiseArticles }) => <BrowseCard label={franchise} href={path} count={franchiseArticles.length} sample={franchiseArticles[0]} />)}</div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{byFranchise.map(({ label, path, articles: franchiseArticles }) => <BrowseCard {label} href={path} count={franchiseArticles.length} />)}</div>
   </section>}
 
   {archive.length > 0 && <section class="wrap py-10 border-t border-line">

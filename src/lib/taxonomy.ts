@@ -1,16 +1,15 @@
 import type { Article } from './articles';
-import { franchisePath, genreLabel, genrePath } from './articles';
+import { franchiseLabel, franchisePath, genreLabel, genrePath } from './articles';
 import { isReview } from './reviews';
 
 // Centralized "latest vs archive" counts so these aren't scattered as magic numbers across pages.
 export const HUB_COUNTS = { reviews: 6, lore: 6, news: 10, trailers: 6, reactions: 6 } as const;
 
-// Minimum article count before a filtered sub-index is considered worth generating/linking.
-export const MIN_INDEXABLE = 1;
-// Standalone filtered taxonomy routes (reviews/lore/news/trailers/reactions by medium, lore by
-// subject, genre) need at least 2 articles to justify their own indexable page. A single-article
-// category stays discoverable from its parent hub instead of getting a thin standalone route.
-export const MIN_ROUTE_ARTICLES = 2;
+// A taxonomy archive needs three distinct published articles before it can be indexed or included
+// in the sitemap. Routes below this threshold remain available to visitors and internal links, but
+// use noindex,follow until their coverage is substantive enough.
+export const MIN_INDEXABLE = 3;
+export const MIN_ROUTE_ARTICLES = MIN_INDEXABLE;
 
 export const MEDIUMS = [
   { slug: 'movies', label: 'Movies' },
@@ -41,7 +40,7 @@ export const COVERAGE_TYPES = [
   { slug: 'news', label: 'News', basePath: '/news/', match: (a: Article) => a.data.contentType === 'news' },
   { slug: 'reviews', label: 'Reviews', basePath: '/reviews/', match: (a: Article) => isReview(a.data.rating) },
   { slug: 'lore', label: 'Lore & Explained', basePath: '/lore/', match: (a: Article) => a.data.contentType === 'lore' },
-  { slug: 'trailers', label: 'Trailers', basePath: '/trailers/', match: (a: Article) => a.data.contentType === 'trailer' || Boolean(a.data.youtubeId) },
+  { slug: 'trailers', label: 'Trailers', basePath: '/trailers/', match: (a: Article) => a.data.contentType === 'trailer' },
   { slug: 'reactions', label: 'Reactions', basePath: '/reactions/', match: (a: Article) => a.data.contentType === 'reaction' },
 ] as const;
 
@@ -62,7 +61,7 @@ export function groupByLoreCategory(articles: Article[]) {
 export function groupByFranchise(articles: Article[]) {
   const names = [...new Set(articles.map(a => a.data.franchise).filter(Boolean) as string[])];
   return names
-    .map(franchise => ({ franchise, path: franchisePath(franchise), articles: articles.filter(a => a.data.franchise === franchise) }))
+    .map(franchise => ({ franchise, label: franchiseLabel(franchise), path: franchisePath(franchise), articles: articles.filter(a => a.data.franchise === franchise) }))
     .filter(g => g.articles.length >= MIN_INDEXABLE)
     .sort((a, b) => b.articles.length - a.articles.length || a.franchise.localeCompare(b.franchise));
 }
