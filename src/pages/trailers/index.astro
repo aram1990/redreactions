@@ -5,7 +5,7 @@ import SectionHeading from '../../components/ui/SectionHeading.astro';
 import BrowseCard from '../../components/hub/BrowseCard.astro';
 import HubContext from '../../components/nav/HubContext.astro';
 import { getPublishedArticles } from '../../lib/articles';
-import { HUB_COUNTS, groupByMedium, splitLatestArchive } from '../../lib/taxonomy';
+import { HUB_COUNTS, MIN_INDEXABLE, groupByMedium, splitLatestArchive } from '../../lib/taxonomy';
 
 const articles = await getPublishedArticles();
 const trailers = articles.filter(a => a.data.contentType === 'trailer');
@@ -13,7 +13,7 @@ const { latest, archive } = splitLatestArchive(trailers, HUB_COUNTS.trailers);
 const byMedium = groupByMedium(trailers);
 ---
 <HubContext label="Trailers" />
-<BaseLayout title="Trailers | Red Reactions" description="Official trailer coverage and sharp-eyed breakdowns across movies, TV, anime and gaming.">
+<BaseLayout title="Trailers | Red Reactions" description="Official trailer coverage and sharp-eyed breakdowns across movies, TV, anime and gaming." noindex={trailers.length < MIN_INDEXABLE}>
   <section class="wrap py-10"><p class="eyebrow">Coverage</p><h1 class="display mt-2 text-5xl sm:text-6xl">Trailers</h1><p class="mt-4 max-w-2xl text-muted">Official trailer coverage and sharp-eyed breakdowns.</p></section>
 
   <section class="wrap pb-10">

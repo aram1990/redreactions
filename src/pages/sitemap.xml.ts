@@ -3,7 +3,7 @@ import { getPublishedArticles, articlePath, authorPath, franchisePath, genrePath
 import { isReview } from '../lib/reviews';
 import { groupByFranchise, groupByGenre, groupByLoreCategory, groupByMedium } from '../lib/taxonomy';
 import { site } from '../config/site';
-const staticPaths = ['/', '/explore/', '/movies/', '/tv/', '/anime/', '/comics/', '/gaming/', '/trailers/', '/news/', '/reviews/', '/lore/', '/about/', '/authors/', '/contact/', '/privacy/', '/cookies/', '/terms/', '/editorial-policy/', '/copyright/'];
+const staticPaths = ['/', '/explore/', '/movies/', '/tv/', '/anime/', '/comics/', '/gaming/', '/news/', '/reviews/', '/lore/', '/about/', '/authors/', '/contact/', '/privacy/', '/cookies/', '/terms/', '/editorial-policy/', '/copyright/'];
 export const GET: APIRoute = async () => {
   const articles = await getPublishedArticles();
   const authorPaths = [...new Set(articles.map(article => authorPath(article.data.author)))];
@@ -18,6 +18,7 @@ export const GET: APIRoute = async () => {
   const trailerPaths = groupByMedium(articles.filter(a => a.data.contentType === 'trailer')).map(g => `/trailers/${g.slug}/`);
   const urls: { path: string; lastmod?: string }[] = [
     ...staticPaths.map(path => ({ path })),
+    ...(articles.filter(article => article.data.contentType === 'trailer').length >= 3 ? [{ path: '/trailers/' }] : []),
     ...(articles.some(article => article.data.contentType === 'reaction') ? [{ path: '/reactions/' }] : []),
     ...authorPaths.map(path => ({ path })),
     ...franchisePaths.map(path => ({ path })),
