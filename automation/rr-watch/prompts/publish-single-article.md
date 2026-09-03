@@ -98,9 +98,36 @@ Follow the existing Red Reactions conventions — do not redesign them:
 
 - Check `git status` first. Touch only your article/media files. Never `git reset --hard`, force
   push, or discard other uncommitted work you did not create.
+- **Expected dirty runtime files.** The RR Watch runtime intentionally keeps exactly these three
+  files tracked, and they normally show as locally modified during a watch run — this is expected
+  and NOT a sign of an unsafe working tree:
+  - `automation/rr-watch/pilot.json`
+  - `automation/rr-watch/state.json`
+  - `automation/rr-watch/queue.json`
+
+  Their presence as modified files, alone, must never cause you to abort. Leave them exactly as
+  you found them: never restore them, never reset them, never stage them, never commit them, and
+  never include them in the article commit. This is a strict allowlist of exactly these three
+  paths — nothing broader. Pre-existing *untracked* files elsewhere in the repo (drafts, scratch
+  output, unrelated work-in-progress) are not your concern either — you're not staging or
+  committing them, so they don't affect your commit's safety. But if `git status` shows any OTHER
+  pre-existing **modified tracked** file outside this allowlist that you did not just create for
+  this article, that's a genuinely unsafe/unexpected working tree: abort with
+  `failureStage: "git"` and explain what you found, rather than guessing it's also safe to ignore.
+- **Stage explicit paths only.** Never `git add .`, `git add -A`, or `git commit -a`. Stage only
+  the files you created/updated for this one article — normally `src/content/articles/<slug>.mdx`
+  and `public/images/articles/<slug>/...`; for a genuine `UPDATE_EXISTING`, stage only that
+  existing article file plus any new/updated media for it.
+- **Verify staging before committing.** Run `git diff --cached --name-only` and confirm every
+  staged path belongs to this one article. If `pilot.json`/`state.json`/`queue.json` or any other
+  unrelated file ended up staged by mistake, unstage only that path (e.g. `git restore --staged
+  <path>`) without touching its working-tree contents, then re-verify before committing.
 - Commit only your article file(s) and any new image(s), with a descriptive message.
-- Push to `main` only when the build passed.
-- If the working tree/branch looks unsafe for any reason, abort and explain why instead.
+- Push to `main` only when the build passed. The three expected-dirty runtime files remaining
+  modified and unstaged in the working tree does not block `npm run build`, the article-only
+  commit, or `git push`. Never edit those runtime files yourself to make the tree "clean" — that
+  is not your job and would corrupt live pilot/queue/dedup state.
+- If the working tree/branch looks unsafe for any other reason, abort and explain why instead.
 
 ### Production verification
 
