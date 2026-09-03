@@ -69,9 +69,11 @@ Only classify `NEW_ARTICLE_AUTO_ELIGIBLE` / `TRAILER_AUTO_ELIGIBLE` when ALL of 
 - It does **not** require the kind of deep, multi-source lore/history/franchise research this site
   otherwise does for `lore`/`feature` pieces.
 - It is **not** a legal, medical, or otherwise high-risk factual claim.
-- You are confident a safe, correctly licensed/appropriate hero image plan exists (you don't need
-  to obtain the image yourself in this phase — just judge whether one realistically exists; the
-  publisher phase will actually source/verify it and must abandon publication if it cannot).
+- You can identify a specific, directly-linkable image URL from an acceptable official/primary
+  source (see Hero image identification below). If you cannot identify one with real confidence,
+  do NOT mark the candidate auto-eligible — route it to `NEW_ARTICLE_MANUAL` instead. A
+  downstream PowerShell step (never Claude) does the actual download/validation; you are only
+  ever identifying the URL and its provenance here, not fetching or judging the image itself.
 
 Typical auto-eligible shapes: official release-date announcements, official casting
 announcements, official trailers/teasers, official game announcements, official
@@ -84,6 +86,27 @@ is unclear. Route these to `NEW_ARTICLE_MANUAL`, `REVIEW_OR_OPINION_MANUAL`,
 `UNVERIFIED_OR_RUMOR`, or `REQUIRES_DEEP_RESEARCH` instead.
 
 If you are not highly confident an item clears every rule above, do not mark it auto-eligible.
+
+## Hero image identification (URL only — you never download anything)
+
+For every candidate you're about to mark auto-eligible, identify:
+
+- `heroImageUrl` — a specific, directly-linkable image file URL (not a webpage) from an official
+  source: the studio/publisher/platform's own press page, official newsroom/media kit, or an
+  official trailer/video's official thumbnail where editorially appropriate. Do not propose a
+  random search-result image, a third-party fan site, or a watermarked/stock image.
+- `heroSourceUrl` — the official page you found it on (for credit/verification).
+- `heroCredit` — how the site should credit it (e.g. `"Capcom"`, `"Netflix"`, `"Official trailer
+  still, Warner Bros."`).
+- `heroSourceType` — exactly one of: `official-press-page`, `official-newsroom`,
+  `official-media-kit`, `official-trailer-thumbnail`, `evaluator-identified-official`,
+  `other-official-promotional`.
+
+A downstream PowerShell step downloads and validates this URL BEFORE the publisher phase is ever
+invoked — if it fails (broken link, not really an image, wrong domain, etc.), the candidate is
+queued as `IMAGE_PREP_REQUIRED` and no publisher Claude call happens at all. So: only propose a
+URL you're actually confident is a real, directly-fetchable official image — a wrong guess costs
+nothing (PowerShell just fails closed), but don't guess wildly either.
 
 ## Duplicate / "update vs. new" check
 
@@ -112,7 +135,7 @@ shape (all arrays may be empty, but must be present):
     { "id": "<candidate id>", "title": "...", "classification": "IGNORE|DUPLICATE|UPDATE_EXISTING|NEW_ARTICLE_MANUAL|NEW_ARTICLE_AUTO_ELIGIBLE|TRAILER_AUTO_ELIGIBLE|REQUIRES_DEEP_RESEARCH|REVIEW_OR_OPINION_MANUAL|UNVERIFIED_OR_RUMOR", "reasoning": "one or two sentences" }
   ],
   "autoEligible": [
-    { "id": "<candidate id>", "title": "...", "url": "...", "source": "...", "angle": "one-sentence proposed article angle", "primarySource": "the strongest official/primary source URL you found" }
+    { "id": "<candidate id>", "title": "...", "url": "...", "source": "...", "angle": "one-sentence proposed article angle", "primarySource": "the strongest official/primary source URL you found", "heroImageUrl": "direct image file URL", "heroSourceUrl": "official page you found it on", "heroCredit": "...", "heroSourceType": "official-press-page|official-newsroom|official-media-kit|official-trailer-thumbnail|evaluator-identified-official|other-official-promotional" }
   ],
   "queued": [
     { "id": "<candidate id>", "title": "...", "url": "...", "source": "...", "classification": "...", "reason": "...", "suggestedAngle": "..." }

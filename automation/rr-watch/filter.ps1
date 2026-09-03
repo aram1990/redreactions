@@ -23,6 +23,17 @@ function Invoke-RRFilter {
   $seenHash = @{}
   if ($seen) { foreach ($p in $seen.PSObject.Properties) { $seenHash[$p.Name] = $p.Value } }
 
+  # Robustness against feeds that rotate/regenerate a GUID for an item we've already seen: derive
+  # a normalized-URL index from everything already in the seen-set (no separate state needed) and
+  # treat a matching normalized URL as seen too, even if today's GUID-based id differs. We do NOT
+  # do the same for title-only matches — two genuinely distinct stories can share very similar
+  # headlines, and over-deduplicating on title would silently drop real news.
+  $seenUrlsHash = New-Object System.Collections.Generic.HashSet[string]
+  foreach ($v in $seenHash.Values) {
+    $u = if ($v -is [PSCustomObject]) { $v.url } elseif ($v -is [System.Collections.IDictionary]) { $v['url'] } else { $null }
+    if ($u) { $norm = Normalize-RRUrl $u; if ($norm) { $seenUrlsHash.Add($norm) | Out-Null } }
+  }
+
   $maxAge = [TimeSpan]::FromHours($Config.candidateMaxAgeHours)
   $now = Get-Date
 
@@ -33,6 +44,8 @@ function Invoke-RRFilter {
     if (-not $c.url -and -not $c.guid) { continue }
     $id = New-RRCandidateId -Url $c.url -Guid $c.guid
     if ($seenHash.ContainsKey($id)) { continue }
+    $normUrlForDedup = Normalize-RRUrl $c.url
+    if ($normUrlForDedup -and $seenUrlsHash.Contains($normUrlForDedup)) { continue }
 
     $normTitle = ($c.title -replace '\s+', ' ').Trim().ToLowerInvariant()
     if (-not $normTitle) { continue }
@@ -48,6 +61,7 @@ function Invoke-RRFilter {
     if (-not (Test-RRLooksEnglish -Title $c.title)) { continue }
 
     $seenTitlesThisBatch.Add($normTitle) | Out-Null
+    if ($normUrlForDedup) { $seenUrlsHash.Add($normUrlForDedup) | Out-Null }
     $seenHash[$id] = @{ title = $c.title; url = $c.url; firstSeenAt = (Get-Date -Format 'o') }
 
     $newOnes += [PSCustomObject]@{

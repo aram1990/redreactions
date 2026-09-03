@@ -17,6 +17,7 @@ param([switch]$DryRun)
 . "$PSScriptRoot\collect.ps1"
 . "$PSScriptRoot\filter.ps1"
 . "$PSScriptRoot\prioritize.ps1"
+. "$PSScriptRoot\prepare-hero.ps1"
 . "$PSScriptRoot\run-claude.ps1"
 
 $lockPath = Join-Path $RRRoot 'logs\.lock'
@@ -29,12 +30,54 @@ $logPath = Get-RRLogPath
 Write-RRLog -Path $logPath -Message "$(Get-Date -Format 'yyyy-MM-dd HH:mm')`nRR WATCH RUN$(if($DryRun){' (forced -DryRun)'})"
 
 function Add-RRQueueItem {
-  param($Queue, [string]$Id, [string]$Title, [string]$Url, [string]$Source, [string]$Classification, [string]$Reason, [string]$SuggestedAngle, [string]$Status, [int]$RetryCount = 0, [string]$NextRetryAt = $null)
+  param($Queue, [string]$Id, [string]$Title, [string]$Url, [string]$Source, [string]$Classification, [string]$Reason, [string]$SuggestedAngle, [string]$Status, [int]$RetryCount = 0, [string]$NextRetryAt = $null, [double]$Score = 0)
   $Queue.items = @($Queue.items) + [PSCustomObject]@{
     id = $Id; title = $Title; url = $Url; source = $Source; classification = $Classification
     reason = $Reason; suggestedAngle = $SuggestedAngle; discoveredAt = (Get-Date -Format 'o')
-    lastEvaluatedAt = (Get-Date -Format 'o'); status = $Status; retryCount = $RetryCount; nextRetryAt = $NextRetryAt
+    lastEvaluatedAt = (Get-Date -Format 'o'); status = $Status; retryCount = $RetryCount; nextRetryAt = $NextRetryAt; score = $Score
   }
+}
+
+# Keeps the strong-overflow bucket small and high-value: drops entries older than
+# config.overflowMaxAgeHours without ever invoking Claude, collapses duplicate normalized-URL/
+# title+source entries (keeping the higher score), and trims to config.maxStrongOverflowQueue by
+# score so genuinely high-value stories always win over older, lower-scored ones. Runs every
+# watch.ps1 invocation, independent of whether the evaluator itself runs this hour.
+function Invoke-RROverflowMaintenance {
+  param($Queue, $Config, [string]$LogPath)
+  $now = (Get-Date).ToUniversalTime()
+  $maxAge = [double]$Config.overflowMaxAgeHours
+  $others = @($Queue.items | Where-Object { $_.status -ne 'strong-overflow' })
+  $overflow = @($Queue.items | Where-Object { $_.status -eq 'strong-overflow' })
+
+  $fresh = @()
+  $expiredCount = 0
+  foreach ($o in $overflow) {
+    $age = $now
+    try { $age = $now - [DateTime]::Parse($o.discoveredAt, $null, [System.Globalization.DateTimeStyles]::RoundtripKind).ToUniversalTime() } catch { $age = [TimeSpan]::Zero }
+    if ($age.TotalHours -gt $maxAge) { $expiredCount++; continue }
+    $fresh += $o
+  }
+
+  $groups = $fresh | Group-Object -Property { if ($_.url) { Normalize-RRUrl $_.url } else { "$($_.source)|$(($_.title -replace '\s+',' ').Trim().ToLowerInvariant())" } }
+  $collapsed = @()
+  $collapsedCount = 0
+  foreach ($g in $groups) {
+    if ($g.Group.Count -gt 1) { $collapsedCount += ($g.Group.Count - 1) }
+    $best = $g.Group | Sort-Object -Property @{ Expression = { [double]$_.score } ; Descending = $true } | Select-Object -First 1
+    $collapsed += $best
+  }
+
+  $capped = @($collapsed | Sort-Object -Property @{ Expression = { [double]$_.score } ; Descending = $true })
+  $maxQueue = [int]$Config.maxStrongOverflowQueue
+  $kept = @($capped | Select-Object -First $maxQueue)
+  $trimmedCount = [Math]::Max(0, $capped.Count - $maxQueue)
+
+  if ($LogPath -and ($expiredCount -gt 0 -or $collapsedCount -gt 0 -or $trimmedCount -gt 0)) {
+    Write-RRLog -Path $LogPath -Message "Overflow queue maintenance: $expiredCount expired (stale, dropped without Claude), $collapsedCount duplicate(s) collapsed, $trimmedCount dropped for exceeding maxStrongOverflowQueue ($maxQueue). $($kept.Count) retained."
+  }
+
+  $Queue.items = @($others) + $kept
 }
 
 try {
@@ -84,13 +127,20 @@ try {
   $pilot.totalStrongCandidates += $prioritized.StrongCount
 
   foreach ($ov in $prioritized.Overflow) {
-    Add-RRQueueItem -Queue $queue -Id $ov.id -Title $ov.title -Url $ov.url -Source $ov.source `
-      -Classification 'STRONG_CANDIDATE_QUEUED' -Reason 'Strong candidate, but exceeded this run''s per-run Claude batch cap; eligible for the next run.' `
-      -SuggestedAngle $null -Status 'strong-overflow' -RetryCount 0 -NextRetryAt $null
+    Add-RRQueueItem -Queue $queue -Id $ov.Candidate.id -Title $ov.Candidate.title -Url $ov.Candidate.url -Source $ov.Candidate.source `
+      -Classification 'STRONG_CANDIDATE_QUEUED' -Reason 'Strong candidate, but exceeded this run''s per-run Claude batch cap; eligible for a later run (subject to overflow-queue aging/ranking).' `
+      -SuggestedAngle $null -Status 'strong-overflow' -RetryCount 0 -NextRetryAt $null -Score $ov.Score
   }
+  if ($prioritized.DroppedLowValueCount -gt 0) { $pilot.totalRemovedDeterministically += $prioritized.DroppedLowValueCount }
+
+  # Age out stale overflow, collapse duplicates, and enforce the overflow cap BEFORE deciding
+  # what (if anything) fills this run's leftover batch slots — so a fresh, higher-scored overflow
+  # entry from this run's Invoke-RRPrioritize call can legitimately outrank and displace an older,
+  # lower-scored one already sitting in the queue.
+  Invoke-RROverflowMaintenance -Queue $queue -Config $config -LogPath $logPath
 
   # --- Merge in due retries (respecting backoff) and due strong-overflow ---
-  $dueRetries = @($queue.items | Where-Object { ($_.status -eq 'pending-retry' -or $_.status -eq 'strong-overflow') -and (Test-RRRetryDue $_) })
+  $dueRetries = @($queue.items | Where-Object { ($_.status -eq 'pending-retry' -or $_.status -eq 'strong-overflow') -and (Test-RRRetryDue $_) } | Sort-Object -Property @{ Expression = { [double]$_.score } ; Descending = $true })
   $batch = @($prioritized.Strong)
   $remainingSlots = [Math]::Max(0, [int]$config.maxCandidatesPerClaudeRun - $batch.Count)
   if ($dueRetries.Count -gt 0 -and $remainingSlots -gt 0) {
@@ -218,9 +268,23 @@ try {
         continue
       }
 
+      # --- Deterministic hero-image preparation (no AI, no publisher call yet) -----
+      $hero = Invoke-RRPrepareHero -CandidateId $cand.id -HeroImageUrl $cand.heroImageUrl `
+        -HeroSourceUrl $cand.heroSourceUrl -HeroCredit $cand.heroCredit -HeroSourceType $cand.heroSourceType `
+        -Config $config -LogPath $logPath
+
+      if (-not $hero.Ok) {
+        Write-RRLog -Path $logPath -Message "IMAGE_PREP_REQUIRED for '$($cand.title)': $($hero.Reason). Publisher NOT invoked — no Claude call spent on a candidate that could never complete."
+        Add-RRQueueItem -Queue $queue -Id $cand.id -Title $cand.title -Url $cand.url -Source $cand.source `
+          -Classification 'IMAGE_PREP_REQUIRED' -Reason $hero.Reason -SuggestedAngle $cand.angle -Status 'queued'
+        $pilot.totalQueued++
+        continue
+      }
+
       $remainingNow = [Math]::Max(0, $fresh.maximumAutoPublished - $fresh.autoPublishedCount)
       $pilot.publisherClaudeRuns++
-      $pubResult = Invoke-RRPublisher -Candidate $cand -Remaining $remainingNow -Config $config -LogPath $logPath
+      $pubResult = Invoke-RRPublisher -Candidate $cand -Remaining $remainingNow -Hero $hero -Config $config -LogPath $logPath
+      Remove-RRHeroStaging -CandidateId $cand.id
 
       if (-not $pubResult.Ok) {
         Write-RRLog -Path $logPath -Message "Publisher unavailable/failed for '$($cand.title)' ($($pubResult.FailureKind)). Preserved for retry; stopping the publication phase for the rest of this run."
@@ -234,13 +298,17 @@ try {
       $pub = $pubResult.Data
 
       if ($pub.published -eq $true -and $pub.verified -eq $true) {
-        $fresh2 = Get-RRPilot
-        $fresh2.autoPublishedCount++
-        $fresh2.totalPublished++
-        $fresh2.publishedUrls = @($fresh2.publishedUrls) + $pub.url
-        Save-RRPilot $fresh2
-        $pilot = $fresh2
-        Write-RRLog -Path $logPath -Message "`nAUTO PUBLICATION`nTitle: $($pub.title)`nSlug: $($pub.slug)`nBuild: PASS`nGit commit: $($pub.commit)`nProduction: PASS`nURL: $($pub.url)`n`nSOCIAL`nX: $($pub.x)`nFacebook: $($pub.facebook)`n`nPilot publications: $($fresh2.autoPublishedCount) / $($fresh2.maximumAutoPublished)"
+        # Increment directly on the in-memory $pilot (already known-fresh via the $gateOpen check
+        # moments ago in this same single-threaded run) rather than re-reading pilot.json from
+        # disk here — an earlier version re-read the whole object at this point, which silently
+        # discarded every counter this run had already incremented in memory (totalRuns,
+        # totalFeedItemsCollected, evaluatorClaudeRuns, etc. never made it to disk). Caught via a
+        # full pipeline test with a stub publisher.
+        $pilot.autoPublishedCount++
+        $pilot.totalPublished++
+        $pilot.publishedUrls = @($pilot.publishedUrls) + $pub.url
+        Save-RRPilot $pilot
+        Write-RRLog -Path $logPath -Message "`nAUTO PUBLICATION`nTitle: $($pub.title)`nSlug: $($pub.slug)`nBuild: PASS`nGit commit: $($pub.commit)`nProduction: PASS`nURL: $($pub.url)`n`nSOCIAL`nX: $($pub.x)`nFacebook: $($pub.facebook)`n`nPilot publications: $($pilot.autoPublishedCount) / $($pilot.maximumAutoPublished)"
       } else {
         $stage = if ($pub.failureStage) { $pub.failureStage } else { 'unknown' }
         Write-RRLog -Path $logPath -Message "NOT PUBLISHED: $($cand.title) [$stage] — $($pub.reason)"

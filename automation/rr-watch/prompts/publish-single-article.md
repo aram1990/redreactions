@@ -11,11 +11,21 @@ draft, or act on anything else, and never look for other candidates to publish i
 PowerShell will re-check every gate again and invoke you again separately for the next one, if any.
 
 Full read/write/bash access to this repository is available to you for this single article only.
+You still fetch the live production URL yourself after pushing (see Production verification) —
+that's a normal, expected network read. What you no longer need, and should not attempt, is
+fetching or downloading the hero image over the network; that already happened before you started.
 
 ## The one candidate
 
 Its id, title, URL, source, proposed angle, and primary source are in the run context JSON given
-to you (inline below or at the printed path).
+to you (inline below or at the printed path). **The hero image has already been downloaded and
+validated by a deterministic PowerShell step before you were invoked** — you are given
+`localHeroPath` (an already-verified local image file), `heroImageCredit`, `heroImageSourceUrl`,
+and `heroImageAltSuggestion` in the run context. You never fetch, download, or otherwise touch
+the network for the hero image — that capability is intentionally not something you need here.
+If `localHeroPath` is present, use it (see Images below). You would not have been invoked at all
+if hero preparation had failed — PowerShell queues those as `IMAGE_PREP_REQUIRED` upstream — so
+its absence here should not happen, but if it somehow does, abort with `failureStage: "image"`.
 
 ## Before doing anything else
 
@@ -65,10 +75,17 @@ Follow the existing Red Reactions conventions — do not redesign them:
 
 ### Images
 
-- A hero image is required. Prefer legitimate official promotional/press assets, stored locally
-  under `public/images/articles/<slug>/` like existing articles — never hotlink a third-party
-  image, never use a watermarked image, never fabricate a credit.
-- If you cannot obtain one, abandon publication — do not create the article file at all.
+- Use the already-staged `localHeroPath` from the run context: move (don't re-download) it into
+  `public/images/articles/<slug>/` following the existing naming convention, using a sensible
+  filename for the slug and its existing extension. Set `heroImage` to that new site-relative
+  path, `heroImageCredit` to the provided `heroImageCredit`, and write a real, specific
+  `heroImageAlt` (the provided `heroImageAltSuggestion` is a starting point, not something to
+  paste verbatim without checking it actually describes the image).
+- Never hotlink a third-party image, never fetch a different image over the network yourself,
+  never fabricate a credit.
+- If `localHeroPath` is missing or doesn't actually exist on disk, abandon publication with
+  `failureStage: "image"` — do not create the article file at all, and do not attempt to source a
+  replacement image yourself.
 
 ### Build safety
 

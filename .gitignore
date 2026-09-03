@@ -14,3 +14,4 @@ dist/
 automation/rr-watch/logs/*
 !automation/rr-watch/logs/.gitkeep
 automation/rr-watch/content-index.json
+automation/rr-watch/staging/

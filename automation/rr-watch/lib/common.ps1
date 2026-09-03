@@ -6,7 +6,7 @@ if (-not (Test-Path (Join-Path $RRRoot 'config.json'))) { $RRRoot = $PSScriptRoo
 # RRRoot is .../automation/rr-watch — the actual repo root is two levels up (past automation/).
 $script:RepoRoot = Split-Path -Parent (Split-Path -Parent $RRRoot)
 
-function Get-RRConfig { Get-Content (Join-Path $RRRoot 'config.json') -Raw | ConvertFrom-Json }
+function Get-RRConfig { Get-Content (Join-Path $RRRoot 'config.json') -Raw -Encoding UTF8 | ConvertFrom-Json }
 # Fills in fields added by later patches so an on-disk pilot.json from an older version doesn't
 # need a manual migration — new fields simply default to 0/null the first time they're read.
 function Add-RRDefaultField {
@@ -14,7 +14,7 @@ function Add-RRDefaultField {
   if (-not ($Obj.PSObject.Properties.Name -contains $Name)) { $Obj | Add-Member -NotePropertyName $Name -NotePropertyValue $Default -Force }
 }
 function Get-RRPilot {
-  $p = Get-Content (Join-Path $RRRoot 'pilot.json') -Raw | ConvertFrom-Json
+  $p = Get-Content (Join-Path $RRRoot 'pilot.json') -Raw -Encoding UTF8 | ConvertFrom-Json
   Add-RRDefaultField $p 'zeroClaudeRuns' 0
   Add-RRDefaultField $p 'totalFeedItemsCollected' 0
   Add-RRDefaultField $p 'totalRemovedDeterministically' 0
@@ -27,11 +27,11 @@ function Get-RRPilot {
   return $p
 }
 function Save-RRPilot($obj) { $obj | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $RRRoot 'pilot.json') -Encoding utf8 }
-function Get-RRState { Get-Content (Join-Path $RRRoot 'state.json') -Raw | ConvertFrom-Json }
+function Get-RRState { Get-Content (Join-Path $RRRoot 'state.json') -Raw -Encoding UTF8 | ConvertFrom-Json }
 function Save-RRState($obj) { $obj | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $RRRoot 'state.json') -Encoding utf8 }
-function Get-RRQueue { Get-Content (Join-Path $RRRoot 'queue.json') -Raw | ConvertFrom-Json }
+function Get-RRQueue { Get-Content (Join-Path $RRRoot 'queue.json') -Raw -Encoding UTF8 | ConvertFrom-Json }
 function Save-RRQueue($obj) { $obj | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $RRRoot 'queue.json') -Encoding utf8 }
-function Get-RRSources { Get-Content (Join-Path $RRRoot 'sources.json') -Raw | ConvertFrom-Json }
+function Get-RRSources { Get-Content (Join-Path $RRRoot 'sources.json') -Raw -Encoding UTF8 | ConvertFrom-Json }
 
 function Get-RRLogPath {
   $stamp = Get-Date -Format 'yyyyMMdd-HHmm'
@@ -67,7 +67,7 @@ function Enter-RRLock {
   param([string]$Path)
   if (Test-Path $Path) {
     try {
-      $pid_ = Get-Content $Path -Raw | ConvertFrom-Json
+      $pid_ = Get-Content $Path -Raw -Encoding UTF8 | ConvertFrom-Json
       $proc = Get-Process -Id $pid_.pid -ErrorAction SilentlyContinue
       if ($proc) { return $false }
     } catch {}
@@ -99,6 +99,14 @@ function New-RRSafeProcessStartInfo {
   $psi.RedirectStandardError = $true
   $psi.RedirectStandardInput = $true
   $psi.UseShellExecute = $false
+  # Explicit UTF-8 (no BOM) on every child stream. .NET's Process defaults these to the console's
+  # current codepage, not UTF-8 — on a non-UTF-8 Windows codepage that silently mangles anything
+  # non-ASCII a child process writes/reads (the "â€”"-style mojibake seen in real run logs), even
+  # though the source files and JSON on disk were correctly UTF-8 all along.
+  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+  $psi.StandardOutputEncoding = $utf8NoBom
+  $psi.StandardErrorEncoding = $utf8NoBom
+  $psi.StandardInputEncoding = $utf8NoBom
   # .NET pre-populates psi.Environment from this process's current environment; we then remove
   # the risky keys from that COPY, leaving the parent PowerShell process's own environment (and
   # the Windows user/system environment) completely untouched.

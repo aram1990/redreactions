@@ -96,7 +96,7 @@ function Invoke-RREvaluator {
 
   $indexResult = Save-RRContentIndex
   Write-RRLog -Path $LogPath -Message "Existing-content index regenerated: $($indexResult.Count) published article(s) (deterministic, no Claude) -> $($indexResult.Path)"
-  $contentIndex = Get-Content $indexResult.Path -Raw | ConvertFrom-Json
+  $contentIndex = Get-Content $indexResult.Path -Raw -Encoding UTF8 | ConvertFrom-Json
 
   $context = [ordered]@{
     phase = 'evaluation'
@@ -112,7 +112,7 @@ function Invoke-RREvaluator {
   $contextPath = Join-Path $RRRoot ("logs\context-eval-{0}.json" -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
   ($context | ConvertTo-Json -Depth 10) | Set-Content -Path $contextPath -Encoding utf8
 
-  $instructions = Get-Content (Join-Path $RRRoot 'prompts\editorial-evaluation.md') -Raw
+  $instructions = Get-Content (Join-Path $RRRoot 'prompts\editorial-evaluation.md') -Raw -Encoding UTF8
   $prompt = "$instructions`n`n---`nRUN CONTEXT JSON (also saved at: $contextPath):`n$($context | ConvertTo-Json -Depth 10)"
 
   Write-RRLog -Path $LogPath -Message "PHASE A: invoking evaluator (read-only 'plan' mode) for $($Candidates.Count) candidate(s) (already capped/ranked by prioritize.ps1)..."
@@ -148,9 +148,11 @@ function Invoke-RRPublisher {
     Phase B. Handles exactly ONE candidate. The caller (watch.ps1) must have re-read pilot.json
     and re-verified mode==live, active==true, not-expired, and remaining-cap > 0 IMMEDIATELY
     before calling this — this function does not re-derive those checks itself, by design, so
-    that the gate is visibly and solely PowerShell's responsibility.
+    that the gate is visibly and solely PowerShell's responsibility. The caller must ALSO have
+    already run prepare-hero.ps1 successfully and pass its result as $Hero — this function does
+    not fetch or validate any image itself; the publisher prompt is instructed accordingly.
   #>
-  param($Candidate, [int]$Remaining, $Config, [string]$LogPath)
+  param($Candidate, [int]$Remaining, $Hero, $Config, [string]$LogPath)
 
   $claudeCmd = Test-RRClaudeAvailable -Config $Config -LogPath $LogPath
   if (-not $claudeCmd) { return New-RRResult -Ok $false -FailureKind 'unavailable' }
@@ -160,11 +162,15 @@ function Invoke-RRPublisher {
     remainingAutoPublish = $Remaining
     repoRoot = $RepoRoot
     candidate = $Candidate
+    localHeroPath = $Hero.LocalPath
+    heroImageCredit = $Hero.Credit
+    heroImageSourceUrl = $Hero.SourceUrl
+    heroImageAltSuggestion = "$($Candidate.title) — official image"
   }
   $contextPath = Join-Path $RRRoot ("logs\context-pub-{0}-{1}.json" -f (Get-Date -Format 'yyyyMMdd-HHmmss'), $Candidate.id)
   ($context | ConvertTo-Json -Depth 10) | Set-Content -Path $contextPath -Encoding utf8
 
-  $instructions = Get-Content (Join-Path $RRRoot 'prompts\publish-single-article.md') -Raw
+  $instructions = Get-Content (Join-Path $RRRoot 'prompts\publish-single-article.md') -Raw -Encoding UTF8
   $prompt = "$instructions`n`n---`nRUN CONTEXT JSON (also saved at: $contextPath):`n$($context | ConvertTo-Json -Depth 10)"
 
   Write-RRLog -Path $LogPath -Message "PHASE B: invoking publisher for exactly one candidate: $($Candidate.title)"

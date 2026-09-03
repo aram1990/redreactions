@@ -43,12 +43,19 @@ Task Scheduler (hourly)
             auto-eligible. Never has publish capability, dry-run or live.
        -> if forced -DryRun, or pilot.json isn't live+active: STOP HERE.
           Auto-eligible items are queued for the owner to review; nothing is published.
-       -> PHASE B — Invoke-RRPublisher (run-claude.ps1), once PER eligible candidate
-            Before EACH invocation, watch.ps1 re-reads pilot.json from disk and re-checks
-            mode==live, active==true, not expired, autoPublishedCount < cap. Only if all of
-            that is true right now does it start a publisher process — with write/git/build
-            capability — scoped to exactly that one candidate. The moment any check fails,
-            no further publisher process starts for the rest of that run.
+       -> for each auto-eligible candidate, in order:
+            watch.ps1 re-reads pilot.json from disk and re-checks mode==live, active==true,
+            not expired, autoPublishedCount < cap. The moment any check fails, no further
+            candidate is even considered for the rest of that run.
+            -> prepare-hero.ps1 (no AI): downloads + validates the evaluator-identified
+               official hero image URL deterministically. If it fails, the candidate is
+               queued as IMAGE_PREP_REQUIRED and — critically — the publisher is never
+               invoked for it, so no Claude call is spent on a candidate that could never
+               have completed anyway.
+            -> only once a usable local hero exists: PHASE B — Invoke-RRPublisher
+               (run-claude.ps1), given that one candidate plus the already-staged local
+               hero path — it never fetches the hero itself. Write/git/build capability,
+               scoped to exactly that one candidate.
        -> results merged into pilot.json / queue.json / logs/run-*.log
 ```
 
@@ -67,6 +74,8 @@ publishing regardless of pilot mode — only the narrowly-scoped, individually-g
 | `relevance-rules.json` | Positive/negative keywords, franchises, breaking-news combos, scoring |
 | `prioritize.ps1` | Deterministic relevance/priority scoring — the pre-Claude gate — no AI |
 | `generate-content-index.ps1` | Builds the lightweight existing-article index from MDX frontmatter — no AI |
+| `prepare-hero.ps1` | Deterministic hero-image download/validation/staging — no AI, no Claude call |
+| `staging/<candidateId>/` | Downloaded-but-not-yet-published hero images (gitignored, cleaned up per run) |
 | `pilot.json` | Pilot state: mode, window, counters — the **single** authoritative safety gate |
 | `state.json` | Seen-candidate cache (dedup) + baseline timestamp |
 | `queue.json` | Manual review / retry-backoff / batch-overflow queue — nothing is ever discarded |
@@ -119,6 +128,12 @@ asks for typed confirmation)
 ```powershell
 .\automation\rr-watch\enable-pilot.ps1
 ```
+If a previous live window was paused (`disable-pilot.ps1`) and its `pilotEndsAt` hasn't passed
+yet, `.\automation\rr-watch\enable-pilot.ps1 -Resume` resumes that exact window — same
+`pilotStartedAt`/`pilotEndsAt`, same `autoPublishedCount` and evaluator-call-window counters —
+instead of starting a fresh 24h window. Running `enable-pilot.ps1` without `-Resume` always
+starts a brand-new window and resets those counters to 0, even if one is still technically live;
+it warns you first if that's about to happen.
 
 **Emergency stop — disable live publishing immediately**
 ```powershell
@@ -163,7 +178,23 @@ Get-ChildItem .\automation\rr-watch\logs\final-report-*.md | Sort-Object LastWri
   `retryCount`/`nextRetryAt` backoff (`config.retryBackoffHours`, longer for a detected
   usage/rate limit via `usageLimitBackoffHours`) before they're eligible again. Strong candidates
   that didn't fit a run's `maxCandidatesPerClaudeRun` cap are queued as `strong-overflow` and
-  picked up by a later run once there's room — also never discarded.
+  picked up by a later run once there's room.
+- **The overflow queue stays small and high-value, on its own, every run**: it's capped at
+  `config.maxStrongOverflowQueue` (default 10) by score, entries older than
+  `config.overflowMaxAgeHours` (default 12h) expire without ever costing a Claude call,
+  duplicate normalized-URL/title+source entries collapse to whichever scored higher, and a
+  fresh, higher-scoring candidate from the current run can legitimately bump an older, weaker
+  one out of the queue. Anything that doesn't clear the (higher) overflow-retention bar
+  (`config.overflowMinScoreBonus` above the normal per-tier threshold) is logged as
+  filtered/low-priority and simply not queued at all — never sent to Claude later.
+- **Hero images are downloaded and validated by PowerShell, never by Claude.** The evaluator only
+  identifies a candidate `heroImageUrl` from an acceptable official source
+  (`heroSourceType` — see `prompts/editorial-evaluation.md`); `prepare-hero.ps1` then downloads,
+  size/MIME/dimension-validates, and stages it locally, entirely deterministically, BEFORE the
+  publisher is ever invoked. If that fails, the candidate is queued as `IMAGE_PREP_REQUIRED` and
+  **no publisher Claude call happens for it** — this is what fixed the real pilot run where two
+  otherwise-good candidates each wasted a full publisher invocation that could never complete,
+  because the non-interactive publisher had no working way to fetch a network image itself.
 - **API-key/Bedrock/Vertex/Foundry billing is actively prevented, not just discouraged**: every
   Claude child process is started with those environment variables stripped from its own
   environment (never from your shell, never from Windows) before it starts, and no value is ever
@@ -183,3 +214,19 @@ Get-ChildItem .\automation\rr-watch\logs\final-report-*.md | Sort-Object LastWri
   immediately before every individual publisher invocation — not just once per hourly run.
 - Social copy is always just **drafted** into the run log — nothing is ever posted to X or
   Facebook by this system.
+- **UTF-8 end to end**: every file read in this automation specifies `-Encoding UTF8` explicitly
+  (PowerShell's default read encoding is the system codepage, not UTF-8), and Claude's child
+  process stdout/stderr/stdin streams are explicitly set to UTF-8 as well — a real run showed
+  mojibake (`â€”`-style corruption) that traced back to `System.Diagnostics.Process` defaulting
+  those streams to the console codepage rather than UTF-8.
+- **Dedup is robust to a feed rotating an item's GUID**: in addition to the GUID-derived id,
+  `filter.ps1` checks a normalized-URL index derived from everything already in `state.json`'s
+  seen-set, so a re-published GUID for a URL you've already seen doesn't count as new. Titles
+  alone are deliberately NOT used for cross-run dedup — two distinct stories can share very
+  similar headlines, and that would risk silently dropping real news.
+- `install-task.ps1` only ever reports success after `Register-ScheduledTask` succeeds AND the
+  task can be read back with `Get-ScheduledTask` with a real repetition interval — an earlier
+  version used an invalid `[TimeSpan]::MaxValue` repetition duration that Windows Task Scheduler
+  silently rejected while the script still printed a misleading green "Installed" message. It now
+  uses a bounded, valid duration (`-RepetitionDurationDays`, default 2) and exits non-zero on any
+  failure instead of claiming success.

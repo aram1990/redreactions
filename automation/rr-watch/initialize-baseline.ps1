@@ -26,6 +26,11 @@ $sources = Get-RRSources
 $state = Get-RRState
 $seen = @{}
 if ($state.seen) { foreach ($p in $state.seen.PSObject.Properties) { $seen[$p.Name] = $p.Value } }
+$seenUrls = New-Object System.Collections.Generic.HashSet[string]
+foreach ($v in $seen.Values) {
+  $u = if ($v -is [PSCustomObject]) { $v.url } elseif ($v -is [System.Collections.IDictionary]) { $v['url'] } else { $null }
+  if ($u) { $n = Normalize-RRUrl $u; if ($n) { $seenUrls.Add($n) | Out-Null } }
+}
 
 $totalBefore = $seen.Count
 $perSource = @{}
@@ -38,8 +43,10 @@ foreach ($feed in $sources.feeds) {
   foreach ($it in $items) {
     if (-not $it.url -and -not $it.guid) { continue }
     $id = New-RRCandidateId -Url $it.url -Guid $it.guid
-    if (-not $seen.ContainsKey($id)) {
+    $normUrl = Normalize-RRUrl $it.url
+    if (-not $seen.ContainsKey($id) -and -not ($normUrl -and $seenUrls.Contains($normUrl))) {
       $seen[$id] = @{ title = $it.title; url = $it.url; firstSeenAt = (Get-Date -Format 'o'); baselined = $true }
+      if ($normUrl) { $seenUrls.Add($normUrl) | Out-Null }
       $count++
       $totalMarked++
     }
