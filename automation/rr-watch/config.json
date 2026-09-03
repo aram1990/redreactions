@@ -11,6 +11,7 @@
   "maxStrongOverflowQueue": 10,
   "overflowMinScoreBonus": 3,
   "overflowMaxAgeHours": 12,
+  "autoEligibleDeferredMaxAgeHours": 24,
   "seenRetentionDays": 45,
   "logRetentionDays": 45,
   "heroMaxBytes": 8388608,

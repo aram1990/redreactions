@@ -19,6 +19,7 @@ param([switch]$DryRun)
 . "$PSScriptRoot\prioritize.ps1"
 . "$PSScriptRoot\prepare-hero.ps1"
 . "$PSScriptRoot\run-claude.ps1"
+. "$PSScriptRoot\deferred.ps1"
 
 $lockPath = Join-Path $RRRoot 'logs\.lock'
 if (-not (Enter-RRLock -Path $lockPath)) {
@@ -85,6 +86,7 @@ try {
   $pilot = Get-RRPilot
   $state = Get-RRState
   $queue = Get-RRQueue
+  Invoke-RRDeferredMigration -Queue $queue -LogPath $logPath | Out-Null
 
   # --- Pilot expiry check (always against the real on-disk state) --------
   if ($pilot.active -and $pilot.mode -eq 'live' -and $pilot.pilotEndsAt) {
@@ -138,6 +140,7 @@ try {
   # entry from this run's Invoke-RRPrioritize call can legitimately outrank and displace an older,
   # lower-scored one already sitting in the queue.
   Invoke-RROverflowMaintenance -Queue $queue -Config $config -LogPath $logPath
+  Invoke-RRDeferredMaintenance -Queue $queue -Config $config -LogPath $logPath
 
   # --- Merge in due retries (respecting backoff) and due strong-overflow ---
   $dueRetries = @($queue.items | Where-Object { ($_.status -eq 'pending-retry' -or $_.status -eq 'strong-overflow') -and (Test-RRRetryDue $_) } | Sort-Object -Property @{ Expression = { [double]$_.score } ; Descending = $true })
@@ -151,16 +154,28 @@ try {
   $notDueCount = @($queue.items | Where-Object { ($_.status -eq 'pending-retry' -or $_.status -eq 'strong-overflow') -and -not (Test-RRRetryDue $_) }).Count
   if ($notDueCount -gt 0) { Write-RRLog -Path $logPath -Message "$notDueCount queued retry/overflow candidate(s) not yet due (backoff in effect)." }
 
+  # --- Merge in due auto-eligible-deferred candidates, LIVE runs only, lowest priority --------
+  # Fresh strong candidates and due retries/overflow (both above) always win any batch slot first;
+  # deferred candidates only fill whatever's left over, and only when this run can actually
+  # publish (a forced -DryRun or a dry-run/inactive pilot would just re-defer them identically,
+  # burning a Claude call for nothing). Deduplicated against every candidate already in the batch
+  # so the same underlying story is never sent to Claude twice in one run; when a fresh candidate
+  # and a deferred one collide, the fresh one already in $batch wins and the deferred duplicate is
+  # simply skipped (its queue row is left alone and naturally collapses via
+  # Invoke-RRDeferredMaintenance on a later run). See deferred.ps1's Merge-RRDeferredIntoBatch.
+  $batch = Merge-RRDeferredIntoBatch -Batch $batch -Queue $queue -Config $config -CanPublish $canPublishThisRun -LogPath $logPath
+
   # Every id now in $batch is about to be (re-)decided this run — remove its old pending-retry /
-  # strong-overflow queue rows ONCE here so every branch below can freely re-add a fresh one
-  # without risk of leaving stale duplicates behind.
+  # strong-overflow / auto-eligible-deferred queue rows ONCE here so every branch below can freely
+  # re-add a fresh one without risk of leaving stale duplicates behind.
+  $deferrableStatuses = @('pending-retry', 'strong-overflow', 'auto-eligible-deferred')
   $priorByIdInBatch = @{}
   foreach ($c in $batch) {
-    $prior = @($queue.items | Where-Object { $_.id -eq $c.id -and ($_.status -eq 'pending-retry' -or $_.status -eq 'strong-overflow') } | Select-Object -First 1)
+    $prior = @($queue.items | Where-Object { $_.id -eq $c.id -and $deferrableStatuses -contains $_.status } | Select-Object -First 1)
     if ($prior.Count -gt 0) { $priorByIdInBatch[$c.id] = $prior[0] }
   }
   $batchIds = @($batch | ForEach-Object { $_.id })
-  $queue.items = @($queue.items | Where-Object { -not (($_.status -eq 'pending-retry' -or $_.status -eq 'strong-overflow') -and $batchIds -contains $_.id) })
+  $queue.items = @($queue.items | Where-Object { -not ($deferrableStatuses -contains $_.status -and $batchIds -contains $_.id) })
 
   if ($batch.Count -eq 0) {
     $pilot.zeroClaudeRuns++
@@ -235,10 +250,10 @@ try {
   if (-not $canPublishThisRun) {
     if ($autoEligible.Count -gt 0) {
       $why = if ($DryRun) { 'forced -DryRun for this run' } elseif ($effectiveMode -ne 'live') { 'pilot mode is dry-run' } else { 'pilot is not active' }
-      Write-RRLog -Path $logPath -Message "`n$($autoEligible.Count) candidate(s) evaluated as auto-eligible, but NOT sent to the publisher ($why). Draft proposals (if any) are under logs\dry-run-*.md."
+      Write-RRLog -Path $logPath -Message "`n$($autoEligible.Count) candidate(s) evaluated as auto-eligible, but NOT sent to the publisher ($why). Stored as auto-eligible-deferred (not ordinary manual queue) so a later LIVE run can reconsider them via Phase A rather than leaving them stranded. Draft proposals (if any) are under logs\dry-run-*.md."
       foreach ($a in $autoEligible) {
         Add-RRQueueItem -Queue $queue -Id $a.id -Title $a.title -Url $a.url -Source $a.source `
-          -Classification 'NEW_ARTICLE_AUTO_ELIGIBLE' -Reason "Auto-eligible but not published: $why" -SuggestedAngle $a.angle -Status 'queued'
+          -Classification 'NEW_ARTICLE_AUTO_ELIGIBLE' -Reason "Auto-eligible but not published: $why" -SuggestedAngle $a.angle -Status 'auto-eligible-deferred'
         $pilot.totalQueued++
       }
     }

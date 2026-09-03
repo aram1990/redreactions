@@ -43,6 +43,17 @@ function Write-RRLog {
   Add-Content -Path $Path -Value $Message -Encoding utf8
 }
 
+# Shared normalized dedup key for "is this the same underlying story" comparisons across
+# candidates/queue-items alike (both shapes expose .url/.title/.source) — same normalized-URL-or-
+# title+source logic watch.ps1's overflow-queue maintenance has used since before this function
+# existed; centralized here so deferred-queue maintenance/dedup (see deferred.ps1) can reuse it
+# without duplicating the normalization rule.
+function Get-RRStoryKey {
+  param($Item)
+  if ($Item.url) { return Normalize-RRUrl $Item.url }
+  return "$($Item.source)|$(($Item.title -replace '\s+',' ').Trim().ToLowerInvariant())"
+}
+
 function Normalize-RRUrl {
   param([string]$Url)
   if (-not $Url) { return '' }

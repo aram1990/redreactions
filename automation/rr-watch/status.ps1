@@ -13,6 +13,7 @@ $queue = Get-RRQueue
 $queuedCount = @($queue.items | Where-Object { $_.status -eq 'queued' }).Count
 $retryCount = @($queue.items | Where-Object { $_.status -eq 'pending-retry' }).Count
 $overflowCount = @($queue.items | Where-Object { $_.status -eq 'strong-overflow' }).Count
+$deferredCount = @($queue.items | Where-Object { $_.status -eq 'auto-eligible-deferred' }).Count
 $imagePrepCount = @($queue.items | Where-Object { $_.classification -eq 'IMAGE_PREP_REQUIRED' }).Count
 
 $latestLog = Get-ChildItem (Join-Path $RRRoot 'logs') -Filter 'run-*.log' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
@@ -50,6 +51,7 @@ if ($FinalReport) {
     "Manual/queued opportunities: $queuedCount",
     "Pending retry (Claude was unavailable): $retryCount",
     "Strong candidates awaiting a later batch: $overflowCount",
+    "Auto-eligible deferred (awaiting a live run's Phase A reconfirmation): $deferredCount",
     "Blocked on image preparation (no publisher call spent): $imagePrepCount",
     "Auto-published: $($Pilot.totalPublished)",
     "Publication limit: $($Pilot.maximumAutoPublished)",
@@ -96,6 +98,7 @@ Write-Host "Remaining allowance:     $([Math]::Max(0,$Pilot.maximumAutoPublished
 Write-Host "Queued manual items:     $queuedCount"
 Write-Host "Pending retry:           $retryCount"
 Write-Host "Strong, awaiting batch:  $overflowCount"
+Write-Host "Auto-eligible deferred:  $deferredCount (awaiting a live run's Phase A reconfirmation)"
 Write-Host "Image-prep blocked:      $imagePrepCount"
 Write-Host "Total failures:          $($Pilot.totalFailures)"
 Write-Host ""
