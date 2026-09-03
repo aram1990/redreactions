@@ -20,17 +20,27 @@ before every single article, not just at the start of an hourly run.
 
 ## How it works
 
+Claude is the **last**, most expensive filter — not the first meaningful one. Most hourly runs
+should invoke it zero times.
+
 ```
 Task Scheduler (hourly)
   -> watch.ps1
-       -> collect.ps1   (fetch RSS/Atom feeds — no AI)
-       -> filter.ps1    (drop already-seen/stale/duplicate/non-English — no AI)
-       -> if zero new candidates: exit, Claude never starts
-       -> PHASE A — Invoke-RREvaluator (run-claude.ps1)
+       -> collect.ps1     (fetch RSS/Atom feeds — no AI)
+       -> filter.ps1      (drop already-seen/stale/duplicate/non-English — no AI)
+       -> prioritize.ps1  (relevance-rules.json: reject noise, score by keywords/franchise/
+                            source-tier/breaking-news combos, rank, cap to
+                            config.maxCandidatesPerClaudeRun — no AI)
+       -> if nothing strong survives, or the daily evaluator-call cap is reached: exit,
+          Claude never starts. Anything strong that didn't fit this run's cap is queued
+          (status "strong-overflow") for a later run — never discarded.
+       -> PHASE A — Invoke-RREvaluator (run-claude.ps1), AT MOST ONCE per run
             ONE Claude Code invocation, restricted to Claude Code's read-only "plan"
             permission mode: it can read/search the repo and research, but has no file-write,
-            git, or side-effecting bash capability. Classifies every candidate; recommends
-            which are auto-eligible. Never has publish capability, dry-run or live.
+            git, or side-effecting bash capability. Given a small deterministically-generated
+            existing-content index (generate-content-index.ps1) for fast duplicate triage —
+            not a repo-wide search. Classifies every candidate; recommends which are
+            auto-eligible. Never has publish capability, dry-run or live.
        -> if forced -DryRun, or pilot.json isn't live+active: STOP HERE.
           Auto-eligible items are queued for the owner to review; nothing is published.
        -> PHASE B — Invoke-RRPublisher (run-claude.ps1), once PER eligible candidate
@@ -42,8 +52,9 @@ Task Scheduler (hourly)
        -> results merged into pilot.json / queue.json / logs/run-*.log
 ```
 
-Claude is never left running between hours, and the evaluator is never capable of publishing
-regardless of pilot mode — only the narrowly-scoped, individually-gated publisher can.
+Claude is never left running between hours, evaluator calls are capped both per-run (batch size)
+and per-24h-window (`maxEvaluatorClaudeRunsPer24h`), and the evaluator is never capable of
+publishing regardless of pilot mode — only the narrowly-scoped, individually-gated publisher can.
 
 ## Files
 
@@ -51,11 +62,14 @@ regardless of pilot mode — only the narrowly-scoped, individually-gated publis
 |---|---|
 | `preflight.ps1` | Runtime/auth check — run before baseline and before enabling live |
 | `initialize-baseline.ps1` | One-time: marks current feed inventory as seen, no Claude |
-| `config.json` | Tunable settings (thresholds, commands, timeouts) — no dry-run flag here, see below |
-| `sources.json` | RSS/Atom feeds — toggle `enabled` per feed |
+| `config.json` | Tunable settings (thresholds, commands, timeouts, batch/daily Claude caps) |
+| `sources.json` | RSS/Atom feeds — toggle `enabled` per feed, `tier` drives priority scoring |
+| `relevance-rules.json` | Positive/negative keywords, franchises, breaking-news combos, scoring |
+| `prioritize.ps1` | Deterministic relevance/priority scoring — the pre-Claude gate — no AI |
+| `generate-content-index.ps1` | Builds the lightweight existing-article index from MDX frontmatter — no AI |
 | `pilot.json` | Pilot state: mode, window, counters — the **single** authoritative safety gate |
 | `state.json` | Seen-candidate cache (dedup) + baseline timestamp |
-| `queue.json` | Manual-review queue — nothing is ever discarded |
+| `queue.json` | Manual review / retry-backoff / batch-overflow queue — nothing is ever discarded |
 | `prompts/editorial-evaluation.md` | Phase A instructions — evaluation only, no publish |
 | `prompts/publish-single-article.md` | Phase B instructions — exactly one article, full access |
 | `logs/run-*.log` | Human-readable per-run log |
@@ -137,8 +151,19 @@ Get-ChildItem .\automation\rr-watch\logs\final-report-*.md | Sort-Object LastWri
   it's a per-user task (`LogonType Interactive`), not a SYSTEM service, so it never needs a
   stored password. `install-task.ps1` uses `pwsh.exe` if present, otherwise `powershell.exe`;
   `preflight.ps1` reports which one your machine will actually use.
-- **Claude usage only happens inside `run-claude.ps1`**, and only when `watch.ps1` found genuinely
-  new candidates after filtering. A quiet hour costs nothing.
+- **Claude usage only happens inside `run-claude.ps1`**, and only when at least one candidate
+  survives ALL of: seen/stale/dedup filtering, `relevance-rules.json` noise rejection and
+  tier/keyword/breaking-news scoring, AND the per-24h evaluator-call cap
+  (`maxEvaluatorClaudeRunsPer24h`, default 8) hasn't been reached. A quiet hour — or an hour where
+  nothing strong enough appeared — costs nothing. `status.ps1` reports zero-Claude-run counts,
+  feed items removed deterministically, strong-candidate counts, and Claude call counts so you
+  can see this working. Tune `relevance-rules.json` and `sources.json`'s per-feed `tier` freely —
+  no code changes needed.
+- **A candidate is never retried blindly every hour.** Failed evaluator/publisher attempts get
+  `retryCount`/`nextRetryAt` backoff (`config.retryBackoffHours`, longer for a detected
+  usage/rate limit via `usageLimitBackoffHours`) before they're eligible again. Strong candidates
+  that didn't fit a run's `maxCandidatesPerClaudeRun` cap are queued as `strong-overflow` and
+  picked up by a later run once there's room — also never discarded.
 - **API-key/Bedrock/Vertex/Foundry billing is actively prevented, not just discouraged**: every
   Claude child process is started with those environment variables stripped from its own
   environment (never from your shell, never from Windows) before it starts, and no value is ever

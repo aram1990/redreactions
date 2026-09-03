@@ -8,12 +8,20 @@
   "lastRun": null,
   "totalRuns": 0,
   "totalCandidates": 0,
-  "totalClaudeRuns": 0,
-  "totalPublished": 0,
   "totalIgnored": 0,
   "totalDuplicates": 0,
   "totalQueued": 0,
   "totalFailures": 0,
+  "totalPublished": 0,
   "publishedUrls": [],
-  "lastExpiryReportPath": null
+  "lastExpiryReportPath": null,
+  "zeroClaudeRuns": 0,
+  "totalFeedItemsCollected": 0,
+  "totalRemovedDeterministically": 0,
+  "totalStrongCandidates": 0,
+  "totalCandidatesSentToClaude": 0,
+  "evaluatorClaudeRuns": 0,
+  "publisherClaudeRuns": 0,
+  "evaluatorRunsWindowStart": null,
+  "evaluatorRunsInWindow": 0
 }

@@ -1,0 +1,55 @@
+{
+  "_comment": "Deterministic, non-AI relevance scoring. Edit freely — no code changes required. Matching is case-insensitive substring matching against the candidate's title + summary.",
+
+  "negativeKeywords": [
+    "best deals", "deal of the day", "% off", "discount", "coupon", "affiliate",
+    "walkthrough", "how to unlock", "how to get", "how to beat", "how to find",
+    "best games to", "best movies to", "best shows to", "ranked", "tier list",
+    "wordle", "connections hint", "nyt connections", "crossword", "daily puzzle",
+    "recipe", "horoscope", "housing market", "stock price", "earnings call",
+    "election", "senator", "congress", "prime minister",
+    "workout", "diet plan", "weight loss",
+    "editorial:", "opinion:", "op-ed"
+  ],
+
+  "positiveKeywordsHigh": [
+    "trailer", "teaser", "release date", "announced", "announcement", "revealed",
+    "official", "premiere", "renewed", "cancelled", "canceled", "casting",
+    "joins cast", "gameplay reveal", "launch date", "delayed", "delay",
+    "greenlit", "confirmed", "first look"
+  ],
+
+  "positiveKeywordsMedium": [
+    "cast", "gameplay", "launch", "season", "movie", "series", "adaptation",
+    "remake", "reboot", "sequel", "prequel", "spin-off", "dlc", "expansion",
+    "box office", "streaming", "premieres", "showrunner", "director",
+    "voice cast", "director's cut", "collector's edition", "beta", "early access"
+  ],
+
+  "franchisesStudiosPlatforms": [
+    "PlayStation", "Xbox", "Nintendo", "Marvel", "DC", "Star Wars", "Netflix",
+    "HBO", "Max", "Prime Video", "Disney", "Pixar", "Warner Bros", "Universal",
+    "Sony Pictures", "A24", "Paramount", "Lionsgate", "Blumhouse", "Crunchyroll",
+    "anime", "manga", "shonen", "shounen", "Studio Ghibli", "Square Enix",
+    "Capcom", "Bethesda", "Ubisoft", "EA", "Rockstar", "Valve", "Riot Games",
+    "Naughty Dog", "FromSoftware", "Wizards of the Coast", "Games Workshop"
+  ],
+
+  "breakingCombos": [
+    { "requireAny": ["trailer"], "requireAny2": ["official", "released", "drops", "debut"] },
+    { "requireAny": ["release date"], "requireAny2": ["official", "confirmed", "announced"] },
+    { "requireAny": ["gameplay reveal", "gameplay"], "requireAny2": ["official", "state of play", "showcase", "direct"] },
+    { "requireAny": ["delayed", "delay"], "requireAny2": ["official", "confirmed"] },
+    { "requireAny": ["renewed", "cancelled", "canceled"], "requireAny2": [] },
+    { "requireAny": ["casting", "joins cast"], "requireAny2": [] }
+  ],
+
+  "scoring": {
+    "highKeywordWeight": 3,
+    "mediumKeywordWeight": 1,
+    "franchiseWeight": 2,
+    "breakingBonus": 8,
+    "tierWeight": { "1": 2, "2": 1, "3": 0 },
+    "minScoreByTier": { "1": 3, "2": 5, "3": 7 }
+  }
+}

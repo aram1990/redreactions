@@ -21,6 +21,7 @@ Write-Host "  - Reset the auto-publication counter to 0 / $($config.maxAutoPubli
 Write-Host "  - Allow the hourly scheduled task (if installed) to have Claude Code write,"
 Write-Host "    commit, push, and deploy up to $($config.maxAutoPublish) strictly-eligible articles unattended."
 Write-Host "  - Social copy is still only ever drafted, never auto-posted."
+Write-Host "  - Reset the evaluator Claude-call cap to 0 / $($config.maxEvaluatorClaudeRunsPer24h) for a fresh 24h window (see config.json's maxEvaluatorClaudeRunsPer24h)"
 Write-Host ""
 Write-Host "Make sure the hourly task is installed (install-task.ps1) and this computer will" -ForegroundColor Yellow
 Write-Host "stay awake and logged in for the automation to actually run." -ForegroundColor Yellow
@@ -38,6 +39,8 @@ $pilot.pilotStartedAt = $now.ToString('o')
 $pilot.pilotEndsAt = $now.AddHours($config.pilotDurationHours).ToString('o')
 $pilot.autoPublishedCount = 0
 $pilot.maximumAutoPublished = $config.maxAutoPublish
+$pilot.evaluatorRunsWindowStart = $now.ToString('o')
+$pilot.evaluatorRunsInWindow = 0
 Save-RRPilot $pilot
 
 Write-Host ""

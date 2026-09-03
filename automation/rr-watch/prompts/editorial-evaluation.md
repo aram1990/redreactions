@@ -10,13 +10,32 @@ ever allowed to write an article, commit, push, or touch the live site. You must
 do any of that yourself in this phase, even if you believe an item is obviously safe — there is no
 tool available to you here that could do it, and you should not ask the user to grant one.
 
-You will be given a JSON **run context** containing the pilot mode/state and a candidate batch,
-either inline below or at the path printed after this document.
+You will be given a JSON **run context** containing the pilot mode/state, a candidate batch, and
+an `existingContentIndex` array — a small, deterministically generated list of every currently
+published article's `slug`/`title`/`contentType`/`topics`/`franchise`/`publishedAt` — either
+inline below or at the path printed after this document.
+
+The candidate batch you're given has ALREADY been through deterministic relevance/noise/priority
+filtering and capped to at most a handful of the strongest candidates (see
+`config.maxCandidatesPerClaudeRun` — you're the last, most expensive filter in the pipeline, not
+the first meaningful one). Every candidate here already cleared a real bar; your job is a fast,
+efficient decision, not exhaustive research.
+
+## Keep this phase fast and cheap
+
+- Use `existingContentIndex` as your first and usually only pass for duplicate/update triage —
+  it's small enough to scan directly. Only read a full article file (or search the repo further)
+  when the index genuinely leaves the duplicate/update question ambiguous for a specific
+  candidate — don't do it as a matter of routine for every candidate.
+- Don't research every candidate deeply. Your primary question per candidate is: is it relevant,
+  is it a duplicate/update, could it become a new article, and is it worth spending more work on
+  (i.e. the publisher phase's deeper research and writing)? You are not writing the article here.
+- If a candidate is obviously `IGNORE` or `DUPLICATE` from the index alone, decide quickly and
+  move on rather than gathering more evidence than the decision needs.
 
 ## Your job
 
-For **each** candidate, inspect the existing site content (`src/content/articles/*.mdx` — grep,
-search, whatever you need) and classify it as exactly one of:
+For **each** candidate, classify it as exactly one of:
 
 - `IGNORE` — not newsworthy enough for Red Reactions, or too thin.
 - `DUPLICATE` — an existing article already covers this exact story/announcement.

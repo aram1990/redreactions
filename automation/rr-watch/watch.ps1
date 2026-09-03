@@ -1,20 +1,22 @@
 ﻿<#
 .SYNOPSIS
   Red Reactions hourly watch entry point. Run by Windows Task Scheduler (or manually for a
-  dry-run test). Does cheap, non-AI collection + filtering first; only invokes Claude Code if
-  genuinely new candidates survive filtering. Never runs Claude continuously — one evaluator
-  process per batch, plus at most one publisher process per individually-gated article.
+  dry-run test). Claude is the LAST filter, never the first: feeds -> deterministic collection
+  -> deterministic relevance/noise filtering -> seen/dedup filtering -> deterministic priority
+  ranking + per-run cap -> ONLY THEN, at most once, the evaluator. Most hourly runs should
+  invoke Claude zero times.
 .PARAMETER DryRun
-  Force dry-run behavior for THIS RUN ONLY, regardless of what pilot.json says on disk. This is
-  enforced by computing $effectiveMode/$effectiveActive up front and passing ONLY those values
-  into the evaluator's run context (never the raw pilot object) — and by never entering the
-  publisher loop at all when this switch is set. pilot.json itself is never modified by -DryRun.
+  Force dry-run behavior for THIS RUN ONLY, regardless of what pilot.json says on disk. Enforced
+  by computing $effectiveMode/$effectiveActive up front and passing ONLY those values into the
+  evaluator's run context — and by never entering the publisher loop when this switch is set.
+  pilot.json itself is never modified by -DryRun.
 #>
 param([switch]$DryRun)
 
 . "$PSScriptRoot\lib\common.ps1"
 . "$PSScriptRoot\collect.ps1"
 . "$PSScriptRoot\filter.ps1"
+. "$PSScriptRoot\prioritize.ps1"
 . "$PSScriptRoot\run-claude.ps1"
 
 $lockPath = Join-Path $RRRoot 'logs\.lock'
@@ -25,6 +27,15 @@ if (-not (Enter-RRLock -Path $lockPath)) {
 
 $logPath = Get-RRLogPath
 Write-RRLog -Path $logPath -Message "$(Get-Date -Format 'yyyy-MM-dd HH:mm')`nRR WATCH RUN$(if($DryRun){' (forced -DryRun)'})"
+
+function Add-RRQueueItem {
+  param($Queue, [string]$Id, [string]$Title, [string]$Url, [string]$Source, [string]$Classification, [string]$Reason, [string]$SuggestedAngle, [string]$Status, [int]$RetryCount = 0, [string]$NextRetryAt = $null)
+  $Queue.items = @($Queue.items) + [PSCustomObject]@{
+    id = $Id; title = $Title; url = $Url; source = $Source; classification = $Classification
+    reason = $Reason; suggestedAngle = $SuggestedAngle; discoveredAt = (Get-Date -Format 'o')
+    lastEvaluatedAt = (Get-Date -Format 'o'); status = $Status; retryCount = $RetryCount; nextRetryAt = $NextRetryAt
+  }
+}
 
 try {
   $config = Get-RRConfig
@@ -49,57 +60,111 @@ try {
   else { $effectiveMode = $pilot.mode; $effectiveActive = [bool]$pilot.active }
   $canPublishThisRun = ($effectiveMode -eq 'live' -and $effectiveActive -and -not $DryRun)
 
-  # --- Collect + filter (non-AI) ------------------------------------------
+  # --- Collect (non-AI) -----------------------------------------------------
   $sources = Get-RRSources
   $enabledCount = @($sources.feeds | Where-Object { $_.enabled }).Count
   $raw = Invoke-RRCollect
+  $pilot.totalFeedItemsCollected += $raw.Count
+
+  # --- Deterministic seen/stale/dupe/non-English filter (non-AI) -----------
   $filterResult = Invoke-RRFilter -RawCandidates $raw -State $state -Config $config
   $newCandidates = @($filterResult.candidates)
   $state = $filterResult.state
+  $removedByFilter = $raw.Count - $newCandidates.Count
 
   $pilot.totalRuns++
   $pilot.totalCandidates += $newCandidates.Count
   $pilot.lastRun = (Get-Date -Format 'o')
 
-  Write-RRLog -Path $logPath -Message "Sources checked: $enabledCount`nFeed items collected: $($raw.Count)`nNew candidates: $($newCandidates.Count)"
+  Write-RRLog -Path $logPath -Message "Sources checked: $enabledCount`nFeed items collected: $($raw.Count)`nNew (unseen/fresh/dedup) candidates: $($newCandidates.Count)"
 
-  $pending = @($queue.items | Where-Object { $_.status -eq 'pending-retry' })
-  if ($pending.Count -gt 0) {
-    Write-RRLog -Path $logPath -Message "Retrying $($pending.Count) previously preserved candidate(s) alongside this batch."
-    $newCandidates += ($pending | ForEach-Object { [PSCustomObject]@{ id=$_.id; title=$_.title; url=$_.url; source=$_.source; category=$_.category; publishedAt=$_.publishedAt; summary=$_.summary; discoveredAt=$_.discoveredAt } })
+  # --- Deterministic relevance + priority scoring (non-AI) ------------------
+  $prioritized = Invoke-RRPrioritize -Candidates $newCandidates -Config $config -LogPath $logPath
+  $pilot.totalRemovedDeterministically += ($removedByFilter + $prioritized.RejectedCount)
+  $pilot.totalStrongCandidates += $prioritized.StrongCount
+
+  foreach ($ov in $prioritized.Overflow) {
+    Add-RRQueueItem -Queue $queue -Id $ov.id -Title $ov.title -Url $ov.url -Source $ov.source `
+      -Classification 'STRONG_CANDIDATE_QUEUED' -Reason 'Strong candidate, but exceeded this run''s per-run Claude batch cap; eligible for the next run.' `
+      -SuggestedAngle $null -Status 'strong-overflow' -RetryCount 0 -NextRetryAt $null
   }
 
-  if ($newCandidates.Count -eq 0) {
-    Write-RRLog -Path $logPath -Message "Claude invoked: NO`n(no genuinely new candidates)"
-    Save-RRState $state; Save-RRPilot $pilot
-    Write-Host "[watch] No new candidates. Claude not invoked."
+  # --- Merge in due retries (respecting backoff) and due strong-overflow ---
+  $dueRetries = @($queue.items | Where-Object { ($_.status -eq 'pending-retry' -or $_.status -eq 'strong-overflow') -and (Test-RRRetryDue $_) })
+  $batch = @($prioritized.Strong)
+  $remainingSlots = [Math]::Max(0, [int]$config.maxCandidatesPerClaudeRun - $batch.Count)
+  if ($dueRetries.Count -gt 0 -and $remainingSlots -gt 0) {
+    $toRetry = @($dueRetries | Select-Object -First $remainingSlots)
+    Write-RRLog -Path $logPath -Message "Adding $($toRetry.Count) due retry/overflow candidate(s) (of $($dueRetries.Count) eligible) into this run's batch."
+    $batch += ($toRetry | ForEach-Object { [PSCustomObject]@{ id=$_.id; title=$_.title; url=$_.url; source=$_.source; category=$null; publishedAt=$null; summary=$null; discoveredAt=$_.discoveredAt } })
+  }
+  $notDueCount = @($queue.items | Where-Object { ($_.status -eq 'pending-retry' -or $_.status -eq 'strong-overflow') -and -not (Test-RRRetryDue $_) }).Count
+  if ($notDueCount -gt 0) { Write-RRLog -Path $logPath -Message "$notDueCount queued retry/overflow candidate(s) not yet due (backoff in effect)." }
+
+  # Every id now in $batch is about to be (re-)decided this run — remove its old pending-retry /
+  # strong-overflow queue rows ONCE here so every branch below can freely re-add a fresh one
+  # without risk of leaving stale duplicates behind.
+  $priorByIdInBatch = @{}
+  foreach ($c in $batch) {
+    $prior = @($queue.items | Where-Object { $_.id -eq $c.id -and ($_.status -eq 'pending-retry' -or $_.status -eq 'strong-overflow') } | Select-Object -First 1)
+    if ($prior.Count -gt 0) { $priorByIdInBatch[$c.id] = $prior[0] }
+  }
+  $batchIds = @($batch | ForEach-Object { $_.id })
+  $queue.items = @($queue.items | Where-Object { -not (($_.status -eq 'pending-retry' -or $_.status -eq 'strong-overflow') -and $batchIds -contains $_.id) })
+
+  if ($batch.Count -eq 0) {
+    $pilot.zeroClaudeRuns++
+    Write-RRLog -Path $logPath -Message "Claude invoked: NO`n(no strong candidates survived deterministic filtering/priority scoring, and no due retries)"
+    Save-RRState $state; Save-RRQueue $queue; Save-RRPilot $pilot
+    Write-Host "[watch] No strong candidates. Claude not invoked."
     exit 0
   }
 
-  # --- PHASE A: evaluation (read-only) -------------------------------------
-  $pilot.totalClaudeRuns++
+  # --- Daily evaluator Claude-call safety cap (rolling window) -------------
+  $windowHours = [double]$config.evaluatorRunsWindowHours
+  if (-not $pilot.evaluatorRunsWindowStart) { $pilot.evaluatorRunsWindowStart = (Get-Date).ToUniversalTime().ToString('o') }
+  $windowStart = [DateTime]::Parse($pilot.evaluatorRunsWindowStart, $null, [System.Globalization.DateTimeStyles]::RoundtripKind).ToUniversalTime()
+  if (((Get-Date).ToUniversalTime() - $windowStart).TotalHours -ge $windowHours) {
+    $pilot.evaluatorRunsWindowStart = (Get-Date).ToUniversalTime().ToString('o')
+    $pilot.evaluatorRunsInWindow = 0
+  }
+  if ($pilot.evaluatorRunsInWindow -ge [int]$config.maxEvaluatorClaudeRunsPer24h) {
+    $pilot.zeroClaudeRuns++
+    Write-RRLog -Path $logPath -Message "Claude invoked: NO`nDaily evaluator Claude-call cap reached ($($pilot.evaluatorRunsInWindow)/$($config.maxEvaluatorClaudeRunsPer24h) in the current $windowHours h window). $($batch.Count) strong candidate(s) queued for a later run/window; nothing discarded."
+    foreach ($c in $batch) {
+      Add-RRQueueItem -Queue $queue -Id $c.id -Title $c.title -Url $c.url -Source $c.source `
+        -Classification 'STRONG_CANDIDATE_QUEUED' -Reason 'Daily evaluator Claude-call cap reached' `
+        -SuggestedAngle $null -Status 'strong-overflow' -RetryCount 0 -NextRetryAt $null
+    }
+    Save-RRState $state; Save-RRQueue $queue; Save-RRPilot $pilot
+    Write-Host "[watch] Daily evaluator cap reached. Claude not invoked."
+    exit 0
+  }
+
+  # --- PHASE A: evaluation (read-only, at most one call per run) -----------
+  $pilot.evaluatorClaudeRuns++
+  $pilot.evaluatorRunsInWindow++
+  $pilot.totalCandidatesSentToClaude += $batch.Count
   $remaining0 = [Math]::Max(0, $pilot.maximumAutoPublished - $pilot.autoPublishedCount)
-  $eval = Invoke-RREvaluator -Candidates $newCandidates -EffectiveMode $effectiveMode -EffectiveActive $effectiveActive `
+  $evalResult = Invoke-RREvaluator -Candidates $batch -EffectiveMode $effectiveMode -EffectiveActive $effectiveActive `
     -Remaining $remaining0 -Max $pilot.maximumAutoPublished -SoFar $pilot.autoPublishedCount -Config $config -LogPath $logPath
 
-  if (-not $eval) {
-    Write-RRLog -Path $logPath -Message "Claude invoked: YES (evaluator unavailable/failed — see above). No publication this run."
-    $existingIds = @($queue.items | ForEach-Object { $_.id })
-    foreach ($c in $newCandidates) {
-      if ($existingIds -notcontains $c.id) {
-        $queue.items = @($queue.items) + [PSCustomObject]@{
-          id=$c.id; title=$c.title; url=$c.url; source=$c.source; classification='PENDING_RETRY'
-          reason='Evaluator unavailable this run'; discoveredAt=$c.discoveredAt; lastEvaluatedAt=(Get-Date -Format 'o')
-          status='pending-retry'
-        }
-      }
+  if (-not $evalResult.Ok) {
+    Write-RRLog -Path $logPath -Message "Claude invoked: YES (evaluator unavailable/failed: $($evalResult.FailureKind)). No publication this run."
+    foreach ($c in $batch) {
+      $retryCount = if ($priorByIdInBatch.ContainsKey($c.id)) { [int]$priorByIdInBatch[$c.id].retryCount + 1 } else { 0 }
+      $nextRetry = Get-RRNextRetryAt -FailureKind $evalResult.FailureKind -RetryCount $retryCount -Config $config
+      Add-RRQueueItem -Queue $queue -Id $c.id -Title $c.title -Url $c.url -Source $c.source `
+        -Classification 'PENDING_RETRY' -Reason "Evaluator unavailable this run ($($evalResult.FailureKind))" `
+        -SuggestedAngle $null -Status 'pending-retry' -RetryCount $retryCount -NextRetryAt $nextRetry
     }
     $pilot.totalFailures++
     Save-RRState $state; Save-RRQueue $queue; Save-RRPilot $pilot
     exit 0
   }
 
-  Write-RRLog -Path $logPath -Message "Claude invoked: YES (evaluator)`n`nRESULTS"
+  $eval = $evalResult.Data
+  Write-RRLog -Path $logPath -Message "Claude invoked: YES (evaluator, $($batch.Count) candidate(s))`n`nRESULTS"
   $counts = @{}
   foreach ($cl in $eval.classifications) {
     $counts[$cl.classification] = ($counts[$cl.classification] + 1)
@@ -108,13 +173,9 @@ try {
   $pilot.totalIgnored += [int]($counts['IGNORE'])
   $pilot.totalDuplicates += [int]($counts['DUPLICATE'])
 
-  $queue.items = @($queue.items | Where-Object { $_.status -ne 'pending-retry' -or ($newCandidates.id -notcontains $_.id) })
   foreach ($q in $eval.queued) {
-    $queue.items = @($queue.items) + [PSCustomObject]@{
-      id=$q.id; title=$q.title; url=$q.url; source=$q.source; classification=$q.classification
-      reason=$q.reason; suggestedAngle=$q.suggestedAngle; discoveredAt=(Get-Date -Format 'o')
-      lastEvaluatedAt=(Get-Date -Format 'o'); status='queued'
-    }
+    Add-RRQueueItem -Queue $queue -Id $q.id -Title $q.title -Url $q.url -Source $q.source `
+      -Classification $q.classification -Reason $q.reason -SuggestedAngle $q.suggestedAngle -Status 'queued'
   }
   $pilot.totalQueued += @($eval.queued).Count
 
@@ -126,11 +187,8 @@ try {
       $why = if ($DryRun) { 'forced -DryRun for this run' } elseif ($effectiveMode -ne 'live') { 'pilot mode is dry-run' } else { 'pilot is not active' }
       Write-RRLog -Path $logPath -Message "`n$($autoEligible.Count) candidate(s) evaluated as auto-eligible, but NOT sent to the publisher ($why). Draft proposals (if any) are under logs\dry-run-*.md."
       foreach ($a in $autoEligible) {
-        $queue.items = @($queue.items) + [PSCustomObject]@{
-          id=$a.id; title=$a.title; url=$a.url; source=$a.source; classification='NEW_ARTICLE_AUTO_ELIGIBLE'
-          reason="Auto-eligible but not published: $why"; suggestedAngle=$a.angle; discoveredAt=(Get-Date -Format 'o')
-          lastEvaluatedAt=(Get-Date -Format 'o'); status='queued'
-        }
+        Add-RRQueueItem -Queue $queue -Id $a.id -Title $a.title -Url $a.url -Source $a.source `
+          -Classification 'NEW_ARTICLE_AUTO_ELIGIBLE' -Reason "Auto-eligible but not published: $why" -SuggestedAngle $a.angle -Status 'queued'
         $pilot.totalQueued++
       }
     }
@@ -138,16 +196,12 @@ try {
     $gateClosed = $false
     foreach ($cand in $autoEligible) {
       if ($gateClosed) {
-        $queue.items = @($queue.items) + [PSCustomObject]@{
-          id=$cand.id; title=$cand.title; url=$cand.url; source=$cand.source; classification='QUEUE_LIMIT_REACHED'
-          reason='Publication gate closed earlier in this same run'; suggestedAngle=$cand.angle; discoveredAt=(Get-Date -Format 'o')
-          lastEvaluatedAt=(Get-Date -Format 'o'); status='queued'
-        }
+        Add-RRQueueItem -Queue $queue -Id $cand.id -Title $cand.title -Url $cand.url -Source $cand.source `
+          -Classification 'QUEUE_LIMIT_REACHED' -Reason 'Publication gate closed earlier in this same run' -SuggestedAngle $cand.angle -Status 'queued'
         $pilot.totalQueued++
         continue
       }
 
-      # Re-read pilot.json fresh from disk and re-check every gate immediately before invoking.
       $fresh = Get-RRPilot
       $nowUtc = (Get-Date).ToUniversalTime()
       $notExpired = $true
@@ -157,51 +211,42 @@ try {
       if (-not $gateOpen) {
         $reason = if ($fresh.autoPublishedCount -ge $fresh.maximumAutoPublished) { 'QUEUE_LIMIT_REACHED' } else { 'PILOT_GATE_CLOSED' }
         Write-RRLog -Path $logPath -Message "Publication gate closed before considering '$($cand.title)' ($reason). No publisher process will start for this or any remaining auto-eligible candidate this run."
-        $queue.items = @($queue.items) + [PSCustomObject]@{
-          id=$cand.id; title=$cand.title; url=$cand.url; source=$cand.source; classification=$reason
-          reason='Fresh pilot.json re-check failed the publication gate'; suggestedAngle=$cand.angle; discoveredAt=(Get-Date -Format 'o')
-          lastEvaluatedAt=(Get-Date -Format 'o'); status='queued'
-        }
+        Add-RRQueueItem -Queue $queue -Id $cand.id -Title $cand.title -Url $cand.url -Source $cand.source `
+          -Classification $reason -Reason 'Fresh pilot.json re-check failed the publication gate' -SuggestedAngle $cand.angle -Status 'queued'
         $pilot.totalQueued++
         $gateClosed = $true
         continue
       }
 
       $remainingNow = [Math]::Max(0, $fresh.maximumAutoPublished - $fresh.autoPublishedCount)
-      $pilot.totalClaudeRuns++
+      $pilot.publisherClaudeRuns++
       $pubResult = Invoke-RRPublisher -Candidate $cand -Remaining $remainingNow -Config $config -LogPath $logPath
 
-      if (-not $pubResult) {
-        Write-RRLog -Path $logPath -Message "Publisher unavailable/failed for '$($cand.title)'. Preserved for retry; stopping the publication phase for the rest of this run."
-        $queue.items = @($queue.items) + [PSCustomObject]@{
-          id=$cand.id; title=$cand.title; url=$cand.url; source=$cand.source; classification='PENDING_RETRY'
-          reason='Publisher unavailable this run'; discoveredAt=(Get-Date -Format 'o'); lastEvaluatedAt=(Get-Date -Format 'o')
-          status='pending-retry'
-        }
+      if (-not $pubResult.Ok) {
+        Write-RRLog -Path $logPath -Message "Publisher unavailable/failed for '$($cand.title)' ($($pubResult.FailureKind)). Preserved for retry; stopping the publication phase for the rest of this run."
+        $nextRetry = Get-RRNextRetryAt -FailureKind $pubResult.FailureKind -RetryCount 0 -Config $config
+        Add-RRQueueItem -Queue $queue -Id $cand.id -Title $cand.title -Url $cand.url -Source $cand.source `
+          -Classification 'PENDING_RETRY' -Reason "Publisher unavailable this run ($($pubResult.FailureKind))" -Status 'pending-retry' -RetryCount 0 -NextRetryAt $nextRetry
         $pilot.totalFailures++
         $gateClosed = $true
         continue
       }
+      $pub = $pubResult.Data
 
-      if ($pubResult.published -eq $true -and $pubResult.verified -eq $true) {
-        # Re-read once more immediately before writing the increment, to keep the window between
-        # gate-check and counter-update as small as this single-process design allows.
+      if ($pub.published -eq $true -and $pub.verified -eq $true) {
         $fresh2 = Get-RRPilot
         $fresh2.autoPublishedCount++
         $fresh2.totalPublished++
-        $fresh2.publishedUrls = @($fresh2.publishedUrls) + $pubResult.url
+        $fresh2.publishedUrls = @($fresh2.publishedUrls) + $pub.url
         Save-RRPilot $fresh2
         $pilot = $fresh2
-        Write-RRLog -Path $logPath -Message "`nAUTO PUBLICATION`nTitle: $($pubResult.title)`nSlug: $($pubResult.slug)`nBuild: PASS`nGit commit: $($pubResult.commit)`nProduction: PASS`nURL: $($pubResult.url)`n`nSOCIAL`nX: $($pubResult.x)`nFacebook: $($pubResult.facebook)`n`nPilot publications: $($fresh2.autoPublishedCount) / $($fresh2.maximumAutoPublished)"
+        Write-RRLog -Path $logPath -Message "`nAUTO PUBLICATION`nTitle: $($pub.title)`nSlug: $($pub.slug)`nBuild: PASS`nGit commit: $($pub.commit)`nProduction: PASS`nURL: $($pub.url)`n`nSOCIAL`nX: $($pub.x)`nFacebook: $($pub.facebook)`n`nPilot publications: $($fresh2.autoPublishedCount) / $($fresh2.maximumAutoPublished)"
       } else {
-        $stage = if ($pubResult.failureStage) { $pubResult.failureStage } else { 'unknown' }
-        Write-RRLog -Path $logPath -Message "NOT PUBLISHED: $($cand.title) [$stage] — $($pubResult.reason)"
+        $stage = if ($pub.failureStage) { $pub.failureStage } else { 'unknown' }
+        Write-RRLog -Path $logPath -Message "NOT PUBLISHED: $($cand.title) [$stage] — $($pub.reason)"
         if ($stage -in @('build','git','push','verify')) { $pilot.totalFailures++ }
-        $queue.items = @($queue.items) + [PSCustomObject]@{
-          id=$cand.id; title=$cand.title; url=$cand.url; source=$cand.source; classification='NEW_ARTICLE_MANUAL'
-          reason="Publisher declined/failed at [$stage]: $($pubResult.reason)"; discoveredAt=(Get-Date -Format 'o')
-          lastEvaluatedAt=(Get-Date -Format 'o'); status='queued'
-        }
+        Add-RRQueueItem -Queue $queue -Id $cand.id -Title $cand.title -Url $cand.url -Source $cand.source `
+          -Classification 'NEW_ARTICLE_MANUAL' -Reason "Publisher declined/failed at [$stage]: $($pub.reason)" -Status 'queued'
         $pilot.totalQueued++
       }
     }

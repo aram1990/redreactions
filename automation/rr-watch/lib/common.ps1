@@ -7,7 +7,25 @@ if (-not (Test-Path (Join-Path $RRRoot 'config.json'))) { $RRRoot = $PSScriptRoo
 $script:RepoRoot = Split-Path -Parent (Split-Path -Parent $RRRoot)
 
 function Get-RRConfig { Get-Content (Join-Path $RRRoot 'config.json') -Raw | ConvertFrom-Json }
-function Get-RRPilot { Get-Content (Join-Path $RRRoot 'pilot.json') -Raw | ConvertFrom-Json }
+# Fills in fields added by later patches so an on-disk pilot.json from an older version doesn't
+# need a manual migration — new fields simply default to 0/null the first time they're read.
+function Add-RRDefaultField {
+  param($Obj, [string]$Name, $Default)
+  if (-not ($Obj.PSObject.Properties.Name -contains $Name)) { $Obj | Add-Member -NotePropertyName $Name -NotePropertyValue $Default -Force }
+}
+function Get-RRPilot {
+  $p = Get-Content (Join-Path $RRRoot 'pilot.json') -Raw | ConvertFrom-Json
+  Add-RRDefaultField $p 'zeroClaudeRuns' 0
+  Add-RRDefaultField $p 'totalFeedItemsCollected' 0
+  Add-RRDefaultField $p 'totalRemovedDeterministically' 0
+  Add-RRDefaultField $p 'totalStrongCandidates' 0
+  Add-RRDefaultField $p 'totalCandidatesSentToClaude' 0
+  Add-RRDefaultField $p 'evaluatorClaudeRuns' 0
+  Add-RRDefaultField $p 'publisherClaudeRuns' 0
+  Add-RRDefaultField $p 'evaluatorRunsWindowStart' $null
+  Add-RRDefaultField $p 'evaluatorRunsInWindow' 0
+  return $p
+}
 function Save-RRPilot($obj) { $obj | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $RRRoot 'pilot.json') -Encoding utf8 }
 function Get-RRState { Get-Content (Join-Path $RRRoot 'state.json') -Raw | ConvertFrom-Json }
 function Save-RRState($obj) { $obj | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $RRRoot 'state.json') -Encoding utf8 }
@@ -89,6 +107,28 @@ function New-RRSafeProcessStartInfo {
     if ($psi.Environment.ContainsKey($name)) { $psi.Environment.Remove($name) | Out-Null; $stripped += $name }
   }
   return [PSCustomObject]@{ Psi = $psi; StrippedVarNames = $stripped }
+}
+
+# Backoff for queue items that failed rather than merely being batch-capped. usage-limit failures
+# get one long, fixed backoff (repeatedly retrying a usage-limited Claude every single hour just
+# burns more attempts against the same limit); everything else escalates through
+# config.retryBackoffHours by retryCount, capped at the schedule's last entry.
+function Get-RRNextRetryAt {
+  param([string]$FailureKind, [int]$RetryCount, $Config)
+  if ($FailureKind -eq 'usage-limit') {
+    return (Get-Date).ToUniversalTime().AddHours([double]$Config.usageLimitBackoffHours).ToString('o')
+  }
+  $schedule = @($Config.retryBackoffHours)
+  $idx = [Math]::Min($RetryCount, $schedule.Count - 1)
+  $hours = if ($idx -ge 0 -and $schedule.Count -gt 0) { [double]$schedule[$idx] } else { 1.0 }
+  return (Get-Date).ToUniversalTime().AddHours($hours).ToString('o')
+}
+
+function Test-RRRetryDue {
+  param($QueueItem)
+  if (-not $QueueItem.nextRetryAt) { return $true }
+  try { return ((Get-Date).ToUniversalTime() -ge [DateTime]::Parse($QueueItem.nextRetryAt, $null, [System.Globalization.DateTimeStyles]::RoundtripKind).ToUniversalTime()) }
+  catch { return $true }
 }
 
 function ConvertTo-RRHashtable {

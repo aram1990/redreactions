@@ -8,14 +8,22 @@
 
   Phase A (Invoke-RREvaluator) runs in Claude Code's restricted "plan" permission mode: it can
   read/search the repo and do research, but has no file-write, git, or bash-with-side-effects
-  capability — it can only classify and recommend. It never has publish capability, in dry-run
+  capability — it can only classify and recommend. It receives a lightweight, deterministically
+  generated existing-content index (not a repo-wide search) for duplicate triage, and at most
+  config.maxCandidatesPerClaudeRun candidates — already deterministically pre-filtered and
+  ranked by prioritize.ps1 — never a raw feed dump. It never has publish capability, in dry-run
   OR live mode.
 
   Phase B (Invoke-RRPublisher) is only ever called by watch.ps1 once per candidate, and only
   after watch.ps1 has freshly re-read pilot.json and re-checked mode/active/expiry/remaining-cap
   immediately beforehand. It is given exactly one candidate and cannot see or act on any other.
+
+  Both phases return a result object of the shape { Ok; FailureKind; Data } rather than a bare
+  $null-or-summary, so the caller can apply the right retry backoff (see lib/common.ps1's
+  Get-RRNextRetryAt) instead of blindly retrying every failure an hour later.
 #>
 . "$PSScriptRoot\lib\common.ps1"
+. "$PSScriptRoot\generate-content-index.ps1"
 
 function Test-RRClaudeAvailable {
   param($Config, [string]$LogPath)
@@ -68,17 +76,27 @@ function Get-RRJsonBlock {
 
 $script:RRLimitPattern = 'usage limit|rate limit|quota exceeded|out of credits|please try again later'
 
+function New-RRResult {
+  param([bool]$Ok, [string]$FailureKind = $null, $Data = $null)
+  [PSCustomObject]@{ Ok = $Ok; FailureKind = $FailureKind; Data = $Data }
+}
+
 function Invoke-RREvaluator {
   <#
     Phase A. $EffectiveMode/$EffectiveActive are computed by the CALLER (watch.ps1) and are what
     actually goes into the run context — NOT read from pilot.json again here — so a forced
     -DryRun always reaches Claude as pilotMode="dry-run"/pilotActive=false regardless of what
-    pilot.json says on disk.
+    pilot.json says on disk. $Candidates should already be capped to
+    config.maxCandidatesPerClaudeRun by prioritize.ps1 before this is called.
   #>
   param([array]$Candidates, [string]$EffectiveMode, [bool]$EffectiveActive, [int]$Remaining, [int]$Max, [int]$SoFar, $Config, [string]$LogPath)
 
   $claudeCmd = Test-RRClaudeAvailable -Config $Config -LogPath $LogPath
-  if (-not $claudeCmd) { return $null }
+  if (-not $claudeCmd) { return New-RRResult -Ok $false -FailureKind 'unavailable' }
+
+  $indexResult = Save-RRContentIndex
+  Write-RRLog -Path $LogPath -Message "Existing-content index regenerated: $($indexResult.Count) published article(s) (deterministic, no Claude) -> $($indexResult.Path)"
+  $contentIndex = Get-Content $indexResult.Path -Raw | ConvertFrom-Json
 
   $context = [ordered]@{
     phase = 'evaluation'
@@ -89,6 +107,7 @@ function Invoke-RREvaluator {
     autoPublishedSoFar = $SoFar
     repoRoot = $RepoRoot
     candidates = $Candidates
+    existingContentIndex = $contentIndex
   }
   $contextPath = Join-Path $RRRoot ("logs\context-eval-{0}.json" -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
   ($context | ConvertTo-Json -Depth 10) | Set-Content -Path $contextPath -Encoding utf8
@@ -96,32 +115,32 @@ function Invoke-RREvaluator {
   $instructions = Get-Content (Join-Path $RRRoot 'prompts\editorial-evaluation.md') -Raw
   $prompt = "$instructions`n`n---`nRUN CONTEXT JSON (also saved at: $contextPath):`n$($context | ConvertTo-Json -Depth 10)"
 
-  Write-RRLog -Path $LogPath -Message "PHASE A: invoking evaluator (read-only 'plan' mode) for $($Candidates.Count) candidate(s)..."
+  Write-RRLog -Path $LogPath -Message "PHASE A: invoking evaluator (read-only 'plan' mode) for $($Candidates.Count) candidate(s) (already capped/ranked by prioritize.ps1)..."
   $result = Invoke-RRClaudeProcess -ClaudeExe $claudeCmd.Source -Args $Config.claudeEvaluatorArgs -Prompt $prompt `
     -TimeoutSeconds $Config.claudeTimeoutSeconds -WorkingDirectory $RepoRoot -LogPath $LogPath
 
   $stdoutPath = Join-Path $RRRoot ("logs\claude-eval-stdout-{0}.txt" -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
   if ($result.TimedOut) {
     Write-RRLog -Path $LogPath -Message "EVALUATOR TIMEOUT after $($Config.claudeTimeoutSeconds)s. Candidates preserved for retry."
-    return $null
+    return New-RRResult -Ok $false -FailureKind 'timeout'
   }
   Set-Content -Path $stdoutPath -Value $result.Stdout -Encoding utf8
   if ($result.Stderr) { Set-Content -Path "$stdoutPath.err" -Value $result.Stderr -Encoding utf8 }
 
   if ($result.ExitCode -ne 0) {
     Write-RRLog -Path $LogPath -Message "EVALUATOR EXIT CODE $($result.ExitCode). See $stdoutPath. Candidates preserved for retry."
-    return $null
+    return New-RRResult -Ok $false -FailureKind 'exit-code'
   }
   if ($result.Stdout -match $RRLimitPattern -or $result.Stderr -match $RRLimitPattern) {
-    Write-RRLog -Path $LogPath -Message "CLAUDE USAGE LIMIT DETECTED during evaluation. Candidates preserved for retry. No API/Bedrock/Vertex fallback will be attempted. See $stdoutPath."
-    return $null
+    Write-RRLog -Path $LogPath -Message "CLAUDE USAGE LIMIT DETECTED during evaluation. Candidates preserved for retry with extended backoff. No API/Bedrock/Vertex fallback will be attempted. See $stdoutPath."
+    return New-RRResult -Ok $false -FailureKind 'usage-limit'
   }
   $summary = Get-RRJsonBlock -Stdout $result.Stdout
   if (-not $summary) {
     Write-RRLog -Path $LogPath -Message "EVALUATOR OUTPUT DID NOT CONTAIN THE REQUIRED JSON SUMMARY BLOCK. Full output at $stdoutPath. Candidates preserved for retry."
-    return $null
+    return New-RRResult -Ok $false -FailureKind 'bad-output'
   }
-  return $summary
+  return New-RRResult -Ok $true -Data $summary
 }
 
 function Invoke-RRPublisher {
@@ -134,7 +153,7 @@ function Invoke-RRPublisher {
   param($Candidate, [int]$Remaining, $Config, [string]$LogPath)
 
   $claudeCmd = Test-RRClaudeAvailable -Config $Config -LogPath $LogPath
-  if (-not $claudeCmd) { return $null }
+  if (-not $claudeCmd) { return New-RRResult -Ok $false -FailureKind 'unavailable' }
 
   $context = [ordered]@{
     phase = 'publication'
@@ -155,23 +174,23 @@ function Invoke-RRPublisher {
   $stdoutPath = Join-Path $RRRoot ("logs\claude-pub-stdout-{0}-{1}.txt" -f (Get-Date -Format 'yyyyMMdd-HHmmss'), $Candidate.id)
   if ($result.TimedOut) {
     Write-RRLog -Path $LogPath -Message "PUBLISHER TIMEOUT after $($Config.publisherTimeoutSeconds)s for '$($Candidate.title)'. Treated as not-published; candidate preserved for retry."
-    return $null
+    return New-RRResult -Ok $false -FailureKind 'timeout'
   }
   Set-Content -Path $stdoutPath -Value $result.Stdout -Encoding utf8
   if ($result.Stderr) { Set-Content -Path "$stdoutPath.err" -Value $result.Stderr -Encoding utf8 }
 
   if ($result.ExitCode -ne 0) {
     Write-RRLog -Path $LogPath -Message "PUBLISHER EXIT CODE $($result.ExitCode) for '$($Candidate.title)'. See $stdoutPath. Treated as not-published; preserved for retry."
-    return $null
+    return New-RRResult -Ok $false -FailureKind 'exit-code'
   }
   if ($result.Stdout -match $RRLimitPattern -or $result.Stderr -match $RRLimitPattern) {
-    Write-RRLog -Path $LogPath -Message "CLAUDE USAGE LIMIT DETECTED during publication of '$($Candidate.title)'. No API/Bedrock/Vertex fallback attempted. Preserved for retry."
-    return $null
+    Write-RRLog -Path $LogPath -Message "CLAUDE USAGE LIMIT DETECTED during publication of '$($Candidate.title)'. No API/Bedrock/Vertex fallback attempted. Preserved for retry with extended backoff."
+    return New-RRResult -Ok $false -FailureKind 'usage-limit'
   }
-  $result_json = Get-RRJsonBlock -Stdout $result.Stdout
-  if (-not $result_json) {
+  $resultJson = Get-RRJsonBlock -Stdout $result.Stdout
+  if (-not $resultJson) {
     Write-RRLog -Path $LogPath -Message "PUBLISHER OUTPUT DID NOT CONTAIN THE REQUIRED JSON BLOCK for '$($Candidate.title)'. Full output at $stdoutPath. Treated as not-published; preserved for retry."
-    return $null
+    return New-RRResult -Ok $false -FailureKind 'bad-output'
   }
-  return $result_json
+  return New-RRResult -Ok $true -Data $resultJson
 }
