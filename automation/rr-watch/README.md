@@ -3,16 +3,20 @@
 Local, Windows-only editorial automation. An hourly PowerShell watcher collects candidate
 entertainment/gaming/anime/comics/trailer news from free RSS/Atom feeds, filters out anything
 not genuinely new with cheap deterministic checks, and — **only when there is something new to
-evaluate** — invokes your existing Claude Code CLI login **once** to classify it, optionally
-write/build/commit/push a very narrow class of strictly-eligible factual articles, and draft
-(never post) social copy.
+evaluate** — invokes your existing Claude Code CLI login to classify it in a read-only
+evaluation phase, then (only in live mode, only after PowerShell independently re-verifies every
+safety gate immediately beforehand, and only one at a time) invokes a separately-scoped
+publisher phase to write/build/commit/push a very narrow class of strictly-eligible factual
+articles, and draft (never post) social copy.
 
-No paid APIs. No `ANTHROPIC_API_KEY`/Anthropic API billing. No X/Facebook API. Uses your existing
-Claude Code subscription/login, your existing Git/GitHub workflow, and your existing Cloudflare
-deployment from `main`.
+No paid APIs. No `ANTHROPIC_API_KEY`/Anthropic API billing, no Bedrock, no Vertex, no Foundry —
+every Claude child process has those routing variables stripped from its own environment before
+it starts. No X/Facebook API. Uses your existing Claude Code subscription/login, your existing
+Git/GitHub workflow, and your existing Cloudflare deployment from `main`.
 
 **Ships in DRY RUN, INACTIVE by default.** Nothing is committed, pushed, or published until you
-explicitly run `enable-pilot.ps1`.
+explicitly run `enable-pilot.ps1` — and even then, PowerShell re-checks the live gate itself
+before every single article, not just at the start of an hourly run.
 
 ## How it works
 
@@ -22,44 +26,89 @@ Task Scheduler (hourly)
        -> collect.ps1   (fetch RSS/Atom feeds — no AI)
        -> filter.ps1    (drop already-seen/stale/duplicate/non-English — no AI)
        -> if zero new candidates: exit, Claude never starts
-       -> run-claude.ps1 (ONE non-interactive Claude Code invocation with the batch)
-            -> Claude classifies, checks the repo for duplicates, and — only if
-               pilot mode is "live", the pilot is active, and the 10-article cap
-               isn't reached — writes/builds/commits/pushes a strictly-eligible article
-               and verifies it live, per prompts/editorial-evaluation.md
+       -> PHASE A — Invoke-RREvaluator (run-claude.ps1)
+            ONE Claude Code invocation, restricted to Claude Code's read-only "plan"
+            permission mode: it can read/search the repo and research, but has no file-write,
+            git, or side-effecting bash capability. Classifies every candidate; recommends
+            which are auto-eligible. Never has publish capability, dry-run or live.
+       -> if forced -DryRun, or pilot.json isn't live+active: STOP HERE.
+          Auto-eligible items are queued for the owner to review; nothing is published.
+       -> PHASE B — Invoke-RRPublisher (run-claude.ps1), once PER eligible candidate
+            Before EACH invocation, watch.ps1 re-reads pilot.json from disk and re-checks
+            mode==live, active==true, not expired, autoPublishedCount < cap. Only if all of
+            that is true right now does it start a publisher process — with write/git/build
+            capability — scoped to exactly that one candidate. The moment any check fails,
+            no further publisher process starts for the rest of that run.
        -> results merged into pilot.json / queue.json / logs/run-*.log
 ```
 
-Claude is never left running between hours. Each scheduled run is a fresh, short-lived process.
+Claude is never left running between hours, and the evaluator is never capable of publishing
+regardless of pilot mode — only the narrowly-scoped, individually-gated publisher can.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `config.json` | Tunable settings (thresholds, commands, timeouts) |
+| `preflight.ps1` | Runtime/auth check — run before baseline and before enabling live |
+| `initialize-baseline.ps1` | One-time: marks current feed inventory as seen, no Claude |
+| `config.json` | Tunable settings (thresholds, commands, timeouts) — no dry-run flag here, see below |
 | `sources.json` | RSS/Atom feeds — toggle `enabled` per feed |
-| `pilot.json` | Pilot state: mode, window, counters — the authoritative safety gate |
-| `state.json` | Seen-candidate cache (dedup) |
+| `pilot.json` | Pilot state: mode, window, counters — the **single** authoritative safety gate |
+| `state.json` | Seen-candidate cache (dedup) + baseline timestamp |
 | `queue.json` | Manual-review queue — nothing is ever discarded |
-| `prompts/editorial-evaluation.md` | The permanent instructions given to Claude every run |
+| `prompts/editorial-evaluation.md` | Phase A instructions — evaluation only, no publish |
+| `prompts/publish-single-article.md` | Phase B instructions — exactly one article, full access |
 | `logs/run-*.log` | Human-readable per-run log |
 | `logs/final-report-*.md` | 24-hour pilot summary, generated automatically at expiry |
+| `logs/preflight-last.json` | Last preflight result |
 
-## Commands
+`pilot.json`'s `mode`/`active` fields are the **only** place dry-run-vs-live state lives.
+`config.json` deliberately has no separate `dryRun` flag — a second copy of that state
+previously existed there unused, which risked going out of sync with `pilot.json`; it has been
+removed rather than wired in, since `pilot.json` already needs to be richer (start/end time,
+counters) to do its job.
 
-**Check status**
+## Commands — recommended first-time order
+
+**1. Preflight** (runtime, PATH, and subscription-auth check; run again before enabling live)
 ```powershell
-.\automation\rr-watch\status.ps1
+.\automation\rr-watch\preflight.ps1
+```
+Then, separately and manually — this script cannot do it for you — run `claude`, and inside it
+run `/status`, and confirm the authenticated account shown is your Claude subscription login,
+not an API key.
+
+**2. Baseline** (run once, before the first real dry run, so the first run doesn't dump up to
+`candidateMaxAgeHours` of backlog into a single Claude invocation)
+```powershell
+.\automation\rr-watch\initialize-baseline.ps1
 ```
 
-**Run one dry run manually** (does this first, before installing anything)
+**3. Manual dry run**
 ```powershell
 .\automation\rr-watch\run-pilot.ps1 -DryRun
 ```
 
-**Install the hourly scheduled task** (watch-mode only; does not enable publishing)
+**4. Inspect the result**
+```powershell
+Get-ChildItem .\automation\rr-watch\logs\run-*.log | Sort-Object LastWriteTime -Descending | Select-Object -First 1 | Get-Content
+Get-Content .\automation\rr-watch\queue.json | ConvertFrom-Json | Select-Object -Expand items
+```
+
+**5. Install the hourly scheduled task** (watch-mode only; does not enable publishing)
 ```powershell
 .\automation\rr-watch\install-task.ps1
+```
+
+**6. Only once you're satisfied — enable the 24-hour live pilot** (up to 10 auto-publications;
+asks for typed confirmation)
+```powershell
+.\automation\rr-watch\enable-pilot.ps1
+```
+
+**Emergency stop — disable live publishing immediately**
+```powershell
+.\automation\rr-watch\disable-pilot.ps1
 ```
 
 **Remove the hourly scheduled task**
@@ -67,46 +116,45 @@ Claude is never left running between hours. Each scheduled run is a fresh, short
 .\automation\rr-watch\remove-task.ps1
 ```
 
-**Enable the 24-hour live pilot** (up to 10 auto-publications; asks for typed confirmation)
+**Check status**
 ```powershell
-.\automation\rr-watch\enable-pilot.ps1
-```
-
-**Disable live publishing immediately (emergency stop)**
-```powershell
-.\automation\rr-watch\disable-pilot.ps1
-```
-
-**View logs**
-```powershell
-Get-ChildItem .\automation\rr-watch\logs\run-*.log | Sort-Object LastWriteTime -Descending
+.\automation\rr-watch\status.ps1
 ```
 
 **View the manual-review queue**
 ```powershell
-Get-Content .\automation\rr-watch\queue.json | ConvertFrom-Json | Select -Expand items
+Get-Content .\automation\rr-watch\queue.json | ConvertFrom-Json | Select-Object -Expand items
 ```
 
 **Check the final 24h report** (also written automatically when the pilot expires)
 ```powershell
-Get-ChildItem .\automation\rr-watch\logs\final-report-*.md | Sort-Object LastWriteTime -Descending | Select -First 1
+Get-ChildItem .\automation\rr-watch\logs\final-report-*.md | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 ```
 
 ## Important notes
 
 - **The computer must be awake and you must be logged in** for the hourly scheduled task to run —
   it's a per-user task (`LogonType Interactive`), not a SYSTEM service, so it never needs a
-  stored password.
+  stored password. `install-task.ps1` uses `pwsh.exe` if present, otherwise `powershell.exe`;
+  `preflight.ps1` reports which one your machine will actually use.
 - **Claude usage only happens inside `run-claude.ps1`**, and only when `watch.ps1` found genuinely
   new candidates after filtering. A quiet hour costs nothing.
-- If `ANTHROPIC_API_KEY` is set in your environment, `run-claude.ps1` logs a loud warning — this
-  pilot does not use it and is not designed to depend on it.
+- **API-key/Bedrock/Vertex/Foundry billing is actively prevented, not just discouraged**: every
+  Claude child process is started with those environment variables stripped from its own
+  environment (never from your shell, never from Windows) before it starts, and no value is ever
+  logged — only variable names, when something was stripped. If subscription auth can't be
+  confirmed (`preflight.ps1` fails), treat the live pilot as not ready.
 - If Claude Code is unavailable (not on PATH, times out, or reports a usage/rate limit), the
   batch is preserved in `queue.json` with `status: "pending-retry"` and retried automatically on
-  the next scheduled run — nothing is silently dropped.
-- The 24-hour window and 10-article cap are enforced in two places: `pilot.json` (checked and
-  updated by PowerShell, which is what Claude is told) and inside Claude's own instructions
-  (`prompts/editorial-evaluation.md`), which refuses to act outside those bounds. PowerShell also
-  hard-caps how many of Claude's reported publications it will count, in case of a discrepancy.
+  the next scheduled run — nothing is silently dropped, and no billing fallback is ever attempted.
+- **The evaluator (Phase A) never has publish capability**, in dry-run or live mode — it runs in
+  Claude Code's restricted read-only "plan" permission mode. Only the publisher (Phase B), which
+  handles exactly one candidate per invocation and is only ever started after PowerShell has
+  freshly re-read `pilot.json` and re-checked mode/active/expiry/remaining-cap, has write/git
+  capability. `--dangerously-skip-permissions` is never used by this automation; if your local
+  Claude Code CLI version turns out to require it for the publisher to run non-interactively,
+  that is a blocker to resolve manually, not something this automation enables for you.
+- The 24-hour window and 10-article cap are enforced by `pilot.json`, re-read fresh from disk
+  immediately before every individual publisher invocation — not just once per hourly run.
 - Social copy is always just **drafted** into the run log — nothing is ever posted to X or
   Facebook by this system.

@@ -3,7 +3,8 @@
 
 $script:RRRoot = Split-Path -Parent $PSScriptRoot
 if (-not (Test-Path (Join-Path $RRRoot 'config.json'))) { $RRRoot = $PSScriptRoot }
-$script:RepoRoot = Split-Path -Parent $RRRoot
+# RRRoot is .../automation/rr-watch — the actual repo root is two levels up (past automation/).
+$script:RepoRoot = Split-Path -Parent (Split-Path -Parent $RRRoot)
 
 function Get-RRConfig { Get-Content (Join-Path $RRRoot 'config.json') -Raw | ConvertFrom-Json }
 function Get-RRPilot { Get-Content (Join-Path $RRRoot 'pilot.json') -Raw | ConvertFrom-Json }
@@ -57,6 +58,38 @@ function Enter-RRLock {
   return $true
 }
 function Exit-RRLock { param([string]$Path) if (Test-Path $Path) { Remove-Item $Path -Force -ErrorAction SilentlyContinue } }
+
+# Environment variables that could route Claude Code through metered/API billing instead of the
+# owner's Claude Code subscription login. Stripped from the CHILD process only — never touched in
+# this PowerShell process or persisted to the system/user environment.
+$script:RRBillingEnvVars = @(
+  'ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN', 'ANTHROPIC_BASE_URL', 'ANTHROPIC_CUSTOM_HEADERS',
+  'CLAUDE_CODE_USE_BEDROCK', 'CLAUDE_CODE_USE_VERTEX', 'ANTHROPIC_VERTEX_PROJECT_ID', 'CLOUD_ML_REGION',
+  'ANTHROPIC_BEDROCK_BASE_URL', 'AWS_PROFILE', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
+  'AWS_SESSION_TOKEN', 'AWS_REGION', 'CLAUDE_CODE_USE_FOUNDRY', 'ANTHROPIC_FOUNDRY_ENDPOINT'
+)
+
+# Builds a ProcessStartInfo whose environment is an explicit copy of this process's environment
+# with every known billing/routing-override variable removed. Returns the psi plus the list of
+# variable NAMES actually stripped (never values) so callers can log without exposing secrets.
+function New-RRSafeProcessStartInfo {
+  param([string]$FileName, [string]$WorkingDirectory)
+  $psi = New-Object System.Diagnostics.ProcessStartInfo
+  $psi.FileName = $FileName
+  $psi.WorkingDirectory = $WorkingDirectory
+  $psi.RedirectStandardOutput = $true
+  $psi.RedirectStandardError = $true
+  $psi.RedirectStandardInput = $true
+  $psi.UseShellExecute = $false
+  # .NET pre-populates psi.Environment from this process's current environment; we then remove
+  # the risky keys from that COPY, leaving the parent PowerShell process's own environment (and
+  # the Windows user/system environment) completely untouched.
+  $stripped = @()
+  foreach ($name in $RRBillingEnvVars) {
+    if ($psi.Environment.ContainsKey($name)) { $psi.Environment.Remove($name) | Out-Null; $stripped += $name }
+  }
+  return [PSCustomObject]@{ Psi = $psi; StrippedVarNames = $stripped }
+}
 
 function ConvertTo-RRHashtable {
   # Converts a nested PSCustomObject (as returned by ConvertFrom-Json) into an ordered hashtable tree.

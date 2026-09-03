@@ -11,7 +11,15 @@ $watchScript = Join-Path $PSScriptRoot 'watch.ps1'
 
 if (-not (Test-Path $watchScript)) { throw "watch.ps1 not found at $watchScript" }
 
-$action = New-ScheduledTaskAction -Execute 'powershell.exe' `
+# Prefer pwsh.exe (PowerShell 7+) when it's actually installed, since it's the currently
+# supported runtime; otherwise fall back to Windows PowerShell 5.1's powershell.exe, which the
+# scripts in this folder are written to run correctly under (no PS7-only syntax is used anywhere
+# in automation/rr-watch). Whichever one Task Scheduler will use is exactly the same executable
+# preflight.ps1 reports, so run that first if you want to confirm before installing.
+$pwshCmd = Get-Command pwsh.exe -ErrorAction SilentlyContinue
+if ($pwshCmd) { $shellExe = $pwshCmd.Source } else { $shellExe = 'powershell.exe' }
+
+$action = New-ScheduledTaskAction -Execute $shellExe `
   -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$watchScript`"" `
   -WorkingDirectory $repoRoot
 
@@ -24,7 +32,7 @@ $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" 
 
 Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force | Out-Null
 
-Write-Host "Installed scheduled task '$TaskName' — runs watch.ps1 hourly." -ForegroundColor Green
+Write-Host "Installed scheduled task '$TaskName' — runs watch.ps1 hourly via $shellExe." -ForegroundColor Green
 Write-Host "It runs only while $env:USERNAME is logged on to this machine, and 'IgnoreNew' means a run"
 Write-Host "already in progress blocks a new one from starting (belt-and-braces alongside watch.ps1's own lock file)."
 Write-Host ""
