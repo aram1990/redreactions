@@ -47,10 +47,13 @@ Task Scheduler (hourly)
             watch.ps1 re-reads pilot.json from disk and re-checks mode==live, active==true,
             not expired, autoPublishedCount < cap. The moment any check fails, no further
             candidate is even considered for the rest of that run.
-            -> prepare-hero.ps1 (no AI): downloads + validates the evaluator-identified
-               official hero image URL deterministically. If it fails, the candidate is
-               queued as IMAGE_PREP_REQUIRED and — critically — the publisher is never
-               invoked for it, so no Claude call is spent on a candidate that could never
+            -> prepare-hero.ps1 (no AI): uses a direct heroImageUrl if given, else fetches
+               the evaluator-identified official source PAGE itself and extracts its own
+               og:image/twitter:image/JSON-LD metadata, else tries an official YouTube
+               thumbnail — then downloads + validates whatever it found, deterministically.
+               If it fails, the candidate is queued as IMAGE_PREP_REQUIRED and — critically —
+               the publisher is never invoked for it, so no Claude call is spent on a
+               candidate that could never
                have completed anyway.
             -> only once a usable local hero exists: PHASE B — Invoke-RRPublisher
                (run-claude.ps1), given that one candidate plus the already-staged local
@@ -187,14 +190,22 @@ Get-ChildItem .\automation\rr-watch\logs\final-report-*.md | Sort-Object LastWri
   one out of the queue. Anything that doesn't clear the (higher) overflow-retention bar
   (`config.overflowMinScoreBonus` above the normal per-tier threshold) is logged as
   filtered/low-priority and simply not queued at all — never sent to Claude later.
-- **Hero images are downloaded and validated by PowerShell, never by Claude.** The evaluator only
-  identifies a candidate `heroImageUrl` from an acceptable official source
-  (`heroSourceType` — see `prompts/editorial-evaluation.md`); `prepare-hero.ps1` then downloads,
-  size/MIME/dimension-validates, and stages it locally, entirely deterministically, BEFORE the
-  publisher is ever invoked. If that fails, the candidate is queued as `IMAGE_PREP_REQUIRED` and
-  **no publisher Claude call happens for it** — this is what fixed the real pilot run where two
-  otherwise-good candidates each wasted a full publisher invocation that could never complete,
-  because the non-interactive publisher had no working way to fetch a network image itself.
+- **Hero images are discovered, downloaded, and validated by PowerShell, never by Claude.** The
+  evaluator does NOT need to find a direct image-file URL — naming an official *source page*
+  (`heroSourcePageUrl` — the studio/publisher/platform's own press page/newsroom/media
+  kit/trailer page, never a general outlet article) is enough, provided `heroSourceType` says
+  why it's official. `prepare-hero.ps1` then: (1) uses a direct `heroImageUrl` if the evaluator
+  already had one; else (2) fetches the source page itself and reads its `og:image`/
+  `twitter:image`/`link[rel=image_src]`/JSON-LD sharing metadata, resolving relative URLs and
+  accepting images on a different CDN host than the page itself; else (3), for an official
+  trailer, derives and tries the standard YouTube thumbnail URL from the video ID. A hardcoded
+  domain blocklist (`relevance-rules.json`'s `nonOfficialHeroDomains`) independently refuses to
+  treat a general entertainment/gaming outlet as an official source page, regardless of what the
+  evaluator claims. Whatever is found still goes through the same size/MIME/dimension validation
+  as before, entirely deterministically, BEFORE the publisher is ever invoked. If nothing usable
+  turns up, the candidate is queued as `IMAGE_PREP_REQUIRED` and **no publisher Claude call
+  happens for it** and — just as importantly — the evaluator no longer has to downgrade an
+  otherwise-solid story to `NEW_ARTICLE_MANUAL` merely for lacking a direct image URL.
 - **API-key/Bedrock/Vertex/Foundry billing is actively prevented, not just discouraged**: every
   Claude child process is started with those environment variables stripped from its own
   environment (never from your shell, never from Windows) before it starts, and no value is ever

@@ -270,7 +270,8 @@ try {
 
       # --- Deterministic hero-image preparation (no AI, no publisher call yet) -----
       $hero = Invoke-RRPrepareHero -CandidateId $cand.id -HeroImageUrl $cand.heroImageUrl `
-        -HeroSourceUrl $cand.heroSourceUrl -HeroCredit $cand.heroCredit -HeroSourceType $cand.heroSourceType `
+        -HeroSourceUrl $cand.heroSourceUrl -HeroSourcePageUrl $cand.heroSourcePageUrl `
+        -HeroCredit $cand.heroCredit -HeroSourceType $cand.heroSourceType -CandidateUrl $cand.url `
         -Config $config -LogPath $logPath
 
       if (-not $hero.Ok) {

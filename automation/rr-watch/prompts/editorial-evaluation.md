@@ -69,11 +69,15 @@ Only classify `NEW_ARTICLE_AUTO_ELIGIBLE` / `TRAILER_AUTO_ELIGIBLE` when ALL of 
 - It does **not** require the kind of deep, multi-source lore/history/franchise research this site
   otherwise does for `lore`/`feature` pieces.
 - It is **not** a legal, medical, or otherwise high-risk factual claim.
-- You can identify a specific, directly-linkable image URL from an acceptable official/primary
-  source (see Hero image identification below). If you cannot identify one with real confidence,
-  do NOT mark the candidate auto-eligible — route it to `NEW_ARTICLE_MANUAL` instead. A
-  downstream PowerShell step (never Claude) does the actual download/validation; you are only
-  ever identifying the URL and its provenance here, not fetching or judging the image itself.
+- You can identify an official source for a hero image — see Hero image identification below.
+  This does **not** require you to find a direct image-file URL yourself: naming a genuine
+  official source PAGE (the studio/publisher/platform's own press page, newsroom, media kit, or
+  trailer page) is enough, because a downstream PowerShell step fetches that page itself and
+  extracts its image automatically. Only route to `NEW_ARTICLE_MANUAL` over the hero image when
+  you cannot identify *any* genuine official source at all (neither a direct image URL nor an
+  official source page) — not merely because you don't have a direct `.jpg`/`.png`/`.webp` link
+  in hand. A wrong guess costs nothing (PowerShell fails closed and queues it), so identify the
+  best official source you're genuinely confident is official, even without a direct file URL.
 
 Typical auto-eligible shapes: official release-date announcements, official casting
 announcements, official trailers/teasers, official game announcements, official
@@ -87,26 +91,40 @@ is unclear. Route these to `NEW_ARTICLE_MANUAL`, `REVIEW_OR_OPINION_MANUAL`,
 
 If you are not highly confident an item clears every rule above, do not mark it auto-eligible.
 
-## Hero image identification (URL only — you never download anything)
+## Hero image identification (you never download or fetch anything for this)
 
-For every candidate you're about to mark auto-eligible, identify:
+For every candidate you're about to mark auto-eligible, identify AT LEAST ONE of `heroImageUrl`
+or `heroSourcePageUrl` (both if you have them), plus:
 
-- `heroImageUrl` — a specific, directly-linkable image file URL (not a webpage) from an official
-  source: the studio/publisher/platform's own press page, official newsroom/media kit, or an
-  official trailer/video's official thumbnail where editorially appropriate. Do not propose a
-  random search-result image, a third-party fan site, or a watermarked/stock image.
-- `heroSourceUrl` — the official page you found it on (for credit/verification).
+- `heroImageUrl` — a specific, directly-linkable image FILE URL (not a webpage), only if you
+  already know one confidently. Leave this `null`/omitted if you don't — that's expected and
+  fine, it does not by itself make the candidate ineligible.
+- `heroSourcePageUrl` — the official page itself: the studio/publisher/platform's own press page,
+  newsroom, media kit, or official trailer page. This is the normal, expected way to identify a
+  hero source — PowerShell fetches this page and extracts its `og:image`/`twitter:image`/etc.
+  metadata deterministically, with no Claude involvement. It must be a genuinely official domain
+  (the studio/publisher/platform/streamer's own site) — **not** a general entertainment/gaming
+  outlet's article about the story (IGN, CBR, Deadline, Variety, Polygon, Kotaku, and similar are
+  never acceptable as `heroSourcePageUrl`, no matter how it's labeled — PowerShell also enforces
+  a domain blocklist independently, but don't propose one of these in the first place).
 - `heroCredit` — how the site should credit it (e.g. `"Capcom"`, `"Netflix"`, `"Official trailer
   still, Warner Bros."`).
 - `heroSourceType` — exactly one of: `official-press-page`, `official-newsroom`,
-  `official-media-kit`, `official-trailer-thumbnail`, `evaluator-identified-official`,
-  `other-official-promotional`.
+  `official-media-kit`, `official-trailer-page`, `official-trailer-thumbnail`,
+  `evaluator-identified-official`, `other-official-promotional`. Say what makes the page
+  official — this drives which automated extraction PowerShell will attempt (e.g. the two
+  trailer types also unlock a deterministic official YouTube-thumbnail fallback when the
+  candidate/source URL is an official YouTube video).
+- `heroSearchHint` — optional short freeform note (e.g. a more specific press-page URL pattern
+  you'd expect, or "check the official YouTube channel's video description") if it might help,
+  purely informational; nothing downstream currently acts on it beyond logging.
 
-A downstream PowerShell step downloads and validates this URL BEFORE the publisher phase is ever
-invoked — if it fails (broken link, not really an image, wrong domain, etc.), the candidate is
-queued as `IMAGE_PREP_REQUIRED` and no publisher Claude call happens at all. So: only propose a
-URL you're actually confident is a real, directly-fetchable official image — a wrong guess costs
-nothing (PowerShell just fails closed), but don't guess wildly either.
+PowerShell does the actual fetch/extraction/download/validation BEFORE the publisher phase is
+ever invoked — if everything it tries fails (broken link, no usable image metadata on the page,
+wrong/blocked domain, etc.), the candidate is queued as `IMAGE_PREP_REQUIRED` and no publisher
+Claude call happens at all. So: identify the best genuinely-official source you're confident
+about, even without a direct file URL — a wrong guess just costs nothing (PowerShell fails
+closed), but don't propose a generic news outlet's page as if it were official.
 
 ## Duplicate / "update vs. new" check
 
@@ -135,7 +153,7 @@ shape (all arrays may be empty, but must be present):
     { "id": "<candidate id>", "title": "...", "classification": "IGNORE|DUPLICATE|UPDATE_EXISTING|NEW_ARTICLE_MANUAL|NEW_ARTICLE_AUTO_ELIGIBLE|TRAILER_AUTO_ELIGIBLE|REQUIRES_DEEP_RESEARCH|REVIEW_OR_OPINION_MANUAL|UNVERIFIED_OR_RUMOR", "reasoning": "one or two sentences" }
   ],
   "autoEligible": [
-    { "id": "<candidate id>", "title": "...", "url": "...", "source": "...", "angle": "one-sentence proposed article angle", "primarySource": "the strongest official/primary source URL you found", "heroImageUrl": "direct image file URL", "heroSourceUrl": "official page you found it on", "heroCredit": "...", "heroSourceType": "official-press-page|official-newsroom|official-media-kit|official-trailer-thumbnail|evaluator-identified-official|other-official-promotional" }
+    { "id": "<candidate id>", "title": "...", "url": "...", "source": "...", "angle": "one-sentence proposed article angle", "primarySource": "the strongest official/primary source URL you found", "heroImageUrl": "direct image file URL, or null if you don't have one", "heroSourcePageUrl": "official source page URL for PowerShell to extract an image from, or null if you already gave a direct heroImageUrl", "heroCredit": "...", "heroSourceType": "official-press-page|official-newsroom|official-media-kit|official-trailer-page|official-trailer-thumbnail|evaluator-identified-official|other-official-promotional", "heroSearchHint": "optional short note, or null" }
   ],
   "queued": [
     { "id": "<candidate id>", "title": "...", "url": "...", "source": "...", "classification": "...", "reason": "...", "suggestedAngle": "..." }

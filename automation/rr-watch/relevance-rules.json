@@ -51,5 +51,13 @@
     "breakingBonus": 8,
     "tierWeight": { "1": 2, "2": 1, "3": 0 },
     "minScoreByTier": { "1": 3, "2": 5, "3": 7 }
-  }
+  },
+
+  "_heroComment": "Domains that must NEVER be treated as an official hero source page for automated image extraction, regardless of what heroSourceType the evaluator claims — general entertainment/gaming press, not the studio/publisher/platform itself. Extend freely as new outlet feeds are added to sources.json.",
+  "nonOfficialHeroDomains": [
+    "ign.com", "cbr.com", "deadline.com", "variety.com", "polygon.com", "kotaku.com",
+    "hollywoodreporter.com", "animenewsnetwork.com", "nintendolife.com", "screenrant.com",
+    "collider.com", "gamesradar.com", "eurogamer.net", "pcgamer.com", "theverge.com",
+    "engadget.com", "gizmodo.com", "avclub.com", "comicbook.com", "gamespot.com"
+  ]
 }
