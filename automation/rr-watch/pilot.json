@@ -1,0 +1,19 @@
+{
+  "mode": "dry-run",
+  "active": false,
+  "pilotStartedAt": null,
+  "pilotEndsAt": null,
+  "autoPublishedCount": 0,
+  "maximumAutoPublished": 10,
+  "lastRun": null,
+  "totalRuns": 0,
+  "totalCandidates": 0,
+  "totalClaudeRuns": 0,
+  "totalPublished": 0,
+  "totalIgnored": 0,
+  "totalDuplicates": 0,
+  "totalQueued": 0,
+  "totalFailures": 0,
+  "publishedUrls": [],
+  "lastExpiryReportPath": null
+}

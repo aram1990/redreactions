@@ -1,0 +1,28 @@
+{
+  "_comment": "Free/public RSS & Atom feeds only. Toggle 'enabled' per feed. Add/remove freely — no code changes required. YouTube channel feeds use the public /feeds/videos.xml endpoint (no API key).",
+  "feeds": [
+    { "name": "IGN - Movies", "url": "https://feeds.feedburner.com/ign/movies-all", "category": "movies", "enabled": true },
+    { "name": "IGN - TV", "url": "https://feeds.feedburner.com/ign/tv-all", "category": "tv", "enabled": true },
+    { "name": "IGN - Games", "url": "https://feeds.feedburner.com/ign/games-all", "category": "gaming", "enabled": true },
+    { "name": "IGN - All", "url": "https://feeds.feedburner.com/ign/all", "category": "general", "enabled": false },
+    { "name": "Variety", "url": "https://variety.com/feed/", "category": "movies", "enabled": true },
+    { "name": "The Hollywood Reporter", "url": "https://www.hollywoodreporter.com/feed/", "category": "tv", "enabled": true },
+    { "name": "Deadline", "url": "https://deadline.com/feed/", "category": "movies", "enabled": true },
+    { "name": "Polygon", "url": "https://www.polygon.com/rss/index.xml", "category": "gaming", "enabled": true },
+    { "name": "Kotaku", "url": "https://kotaku.com/rss", "category": "gaming", "enabled": true },
+    { "name": "PlayStation Blog", "url": "https://blog.playstation.com/feed/", "category": "gaming", "enabled": true },
+    { "name": "Xbox Wire", "url": "https://news.xbox.com/en-us/feed/", "category": "gaming", "enabled": true },
+    { "name": "Nintendo Life", "url": "https://www.nintendolife.com/feeds/latest", "category": "gaming", "enabled": true },
+    { "name": "Anime News Network - All", "url": "https://www.animenewsnetwork.com/all/rss.xml", "category": "anime", "enabled": true },
+    { "name": "Crunchyroll News", "url": "https://www.crunchyroll.com/newsrss", "category": "anime", "enabled": false },
+    { "name": "CBR - Comics/Movies/TV", "url": "https://www.cbr.com/feed/", "category": "comics", "enabled": true },
+    { "name": "Comic Book Resources - Games", "url": "https://www.cbr.com/feed/category/game-news/", "category": "gaming", "enabled": false },
+    { "name": "Screen Rant", "url": "https://screenrant.com/feed/", "category": "general", "enabled": false },
+    { "name": "Collider", "url": "https://collider.com/feed/", "category": "general", "enabled": false },
+    { "name": "YouTube - Marvel Entertainment (trailers)", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCvC4D8onUfXzvjTOM-dBfEA", "category": "trailers", "enabled": true },
+    { "name": "YouTube - DC (trailers)", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UChNSSj7ZAY6Fnh8kY7dHDrA", "category": "trailers", "enabled": false },
+    { "name": "YouTube - PlayStation (trailers)", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC-2Y8dQb0S6DtpxNgAKoJKA", "category": "trailers", "enabled": true },
+    { "name": "YouTube - Xbox (trailers)", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCjBaVIXW-53WeE9lVeWY5uQ", "category": "trailers", "enabled": false },
+    { "name": "YouTube - Netflix (trailers)", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCWOA1ZGywLbqmigxE4Qlvuw", "category": "trailers", "enabled": true }
+  ]
+}

@@ -8,3 +8,7 @@ dist/
 *.log
 
 **/SOURCES-AND-PLACEMENT.txt
+
+# Red Reactions watch automation — runtime logs only (state/queue/pilot JSON stay tracked)
+automation/rr-watch/logs/*
+!automation/rr-watch/logs/.gitkeep

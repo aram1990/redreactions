@@ -1,0 +1,18 @@
+{
+  "dryRun": true,
+  "maxAutoPublish": 10,
+  "pilotDurationHours": 24,
+  "candidateMaxAgeHours": 72,
+  "seenRetentionDays": 45,
+  "logRetentionDays": 45,
+  "claudeCommand": "claude",
+  "claudeArgs": ["-p", "--permission-mode", "acceptEdits"],
+  "claudeTimeoutSeconds": 1800,
+  "buildCommand": "npm",
+  "buildArgs": ["run", "build"],
+  "productionUrlBase": "https://redreactions.com",
+  "deployWaitSeconds": 90,
+  "deployPollIntervalSeconds": 15,
+  "httpTimeoutSeconds": 20,
+  "userAgent": "RedReactionsWatch/1.0 (+https://redreactions.com)"
+}
