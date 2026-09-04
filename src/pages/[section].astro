@@ -1,7 +1,7 @@
 ---
 import CategoryLayout from '../layouts/CategoryLayout.astro';
 import { getPublishedArticles, type Article } from '../lib/articles';
-import { mediumCoverageLinks } from '../lib/taxonomy';
+import { mediumCoverageLinks, groupByFranchise } from '../lib/taxonomy';
 const sections = {
   movies:{title:'Movies',desc:'News, reviews and analysis from the big screen.',match:(a:Article)=>a.data.topics.includes('movies')},
   tv:{title:'TV & Streaming',desc:'The shows, finales and streaming worlds worth talking about.',match:(a:Article)=>a.data.topics.includes('tv')},
@@ -14,5 +14,10 @@ const section=Astro.params.section as keyof typeof sections;
 const data=sections[section];
 const articles=(await getPublishedArticles()).filter(data.match);
 const browse = mediumCoverageLinks(articles, section).map(c => ({ label: c.label, href: c.href, count: c.articles.length }));
+// Franchises relevant to THIS topic specifically (not the site-wide top franchises the homepage
+// shows) -- same MIN_INDEXABLE + count-sort rule via groupByFranchise, just scoped to this topic's
+// own articles first, so e.g. Insidious never shows up on the Gaming page.
+const topicFranchises = groupByFranchise(articles);
+const franchiseBrowse = topicFranchises.length >= 2 ? topicFranchises.slice(0, 6).map(f => ({ label: f.label, href: f.path, count: f.articles.length })) : [];
 ---
-<CategoryLayout title={data.title} description={data.desc} {articles} {browse} browseTitle={`Browse ${data.title} Coverage`} />
+<CategoryLayout title={data.title} description={data.desc} {articles} {browse} browseTitle={`Browse ${data.title} Coverage`} {franchiseBrowse} />

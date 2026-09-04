@@ -11,10 +11,11 @@ interface CoverageSection { label: string; href?: string; articles: Article[]; }
 interface Props {
   title: string; description: string; articles: Article[];
   browse?: BrowseItem[]; browseTitle?: string;
+  franchiseBrowse?: BrowseItem[];
   sections?: CoverageSection[];
   noindex?: boolean;
 }
-const { title, description, articles, browse = [], browseTitle = 'Browse', sections = [], noindex = false } = Astro.props;
+const { title, description, articles, browse = [], browseTitle = 'Browse', franchiseBrowse = [], sections = [], noindex = false } = Astro.props;
 const [lead, ...rest] = articles;
 // Articles may belong to several coverage types. Reserve the primary list first, then only render
 // a story in the first supplementary section where it appears.
@@ -32,6 +33,11 @@ const uniqueSections = sections.map((section) => {
   {browse.length > 0 && <section class="wrap pb-10">
     <SectionHeading title={browseTitle} />
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{browse.map((item) => <BrowseCard label={item.label} href={item.href} count={item.count} />)}</div>
+  </section>}
+
+  {franchiseBrowse.length > 0 && <section class="wrap pb-10">
+    <SectionHeading title={`Explore ${title} by Franchise`} href="/explore/" label="All franchises" />
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{franchiseBrowse.map((item) => <BrowseCard label={item.label} href={item.href} count={item.count} />)}</div>
   </section>}
 
   <section class="wrap"><SectionHeading title="Featured" />{lead ? <ArticleCard article={lead} variant="hero" /> : <p class="text-muted">No published articles in this section yet.</p>}</section>
