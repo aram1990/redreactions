@@ -1,49 +1,4 @@
 {
-  "eleven-explained-stranger-things": {
-    "widths": [
-      480,
-      768,
-      1200
-    ],
-    "sourceWidth": 1200,
-    "sourceHeight": 600
-  },
-  "kingdom-hearts-4-everything-we-know": {
-    "widths": [
-      480,
-      768,
-      1200
-    ],
-    "sourceWidth": 1280,
-    "sourceHeight": 720
-  },
-  "peter-petrelli-explained-heroes": {
-    "widths": [
-      480,
-      768,
-      1200
-    ],
-    "sourceWidth": 1982,
-    "sourceHeight": 1317
-  },
-  "gta6-trailer-2-breakdown": {
-    "widths": [
-      480,
-      768,
-      1200
-    ],
-    "sourceWidth": 1280,
-    "sourceHeight": 720
-  },
-  "gta6-everything-we-know": {
-    "widths": [
-      480,
-      768,
-      1200
-    ],
-    "sourceWidth": 1600,
-    "sourceHeight": 900
-  },
   "absolute-batman-explained": {
     "widths": [
       480,
@@ -52,6 +7,186 @@
     ],
     "sourceWidth": 1600,
     "sourceHeight": 900
+  },
+  "absolute-superman-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "absolute-superman-powers-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "absolute-universe-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "absolute-wonder-woman-explained": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 1000,
+    "sourceHeight": 1000
+  },
+  "ahsoka-season-2-trailer": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
+  },
+  "ali-g-who-iz-i-trailer-sacha-baron-cohen": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 1787
+  },
+  "apothecary-diaries-explained-novels-manga-anime-live-action": {
+    "widths": [
+      480
+    ],
+    "sourceWidth": 512,
+    "sourceHeight": 780
+  },
+  "apple-tv-price-increase-2026": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 630
+  },
+  "august-31st-long-summer-anime-live-action-shaft": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 1783
+  },
+  "avengers-endgame-encore-explained-doomsday": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
+  },
+  "baroque-works-explained-one-piece": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1400,
+    "sourceHeight": 787
+  },
+  "blue-eye-samurai-season-2-trailer-season-3-renewal": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 675
+  },
+  "chris-hansen-reacts-robert-pattinson-primetime": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 2400,
+    "sourceHeight": 1350
+  },
+  "cyberpunk-edgerunners-2-release-date-october": {
+    "widths": [
+      480
+    ],
+    "sourceWidth": 715,
+    "sourceHeight": 500
+  },
+  "daeron-targaryen-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "dan-stevens-cast-robocop-prime-video-series": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 853
+  },
+  "days-of-thunder-2-cast-release-date": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1920,
+    "sourceHeight": 1080
+  },
+  "dc-absolute-universe-reading-order": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 1000,
+    "sourceHeight": 1000
+  },
+  "dc-comics-november-2026-solicitations": {
+    "widths": [
+      480
+    ],
+    "sourceWidth": 740,
+    "sourceHeight": 1124
+  },
+  "dc-manhunters-explained-green-lantern-predecessors": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 1000,
+    "sourceHeight": 1000
+  },
+  "dc-marvel-crossover-reading-order": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 533
   },
   "dc-next-level-explained": {
     "widths": [
@@ -62,7 +197,119 @@
     "sourceWidth": 1600,
     "sourceHeight": 800
   },
-  "silo-season-4-everything-we-know": {
+  "deadites-explained-evil-dead-demons": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "disney-pokemon-distribution-deal-aardman-sirfetchd-pichu": {
+    "widths": [
+      480
+    ],
+    "sourceWidth": 578,
+    "sourceHeight": 327
+  },
+  "doctor-doom-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1300,
+    "sourceHeight": 730
+  },
+  "doom-hates-reed": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "dragon-ball-super-beerus-october-11-premiere": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 1699
+  },
+  "dune-messiah-explained-part-three": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1400,
+    "sourceHeight": 788
+  },
+  "dune-part-three-early-imax-screenings": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 2700,
+    "sourceHeight": 1519
+  },
+  "eleven-explained-stranger-things": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 600
+  },
+  "every-lantern-corps-explained-emotional-spectrum": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 1000,
+    "sourceHeight": 1000
+  },
+  "evil-dead-burn-ending-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "fable-gameplay-breakdown-albion-combat-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "facing-el-chapo-review": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 675
+  },
+  "final-fantasy-vii-revelation-april-8-2027-release-date": {
+    "widths": [
+      480
+    ],
+    "sourceWidth": 700,
+    "sourceHeight": 1179
+  },
+  "frontier-developments-disney-management-game": {
     "widths": [
       480,
       768,
@@ -70,6 +317,211 @@
     ],
     "sourceWidth": 1920,
     "sourceHeight": 1080
+  },
+  "furious-renewed-season-2-hulu-before-season-1-finale": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 3200,
+    "sourceHeight": 1040
+  },
+  "gal-gadot-wonder-woman-return-dc-studios": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
+  },
+  "gamescom-2026-opening-night-live-schedule": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1920,
+    "sourceHeight": 1080
+  },
+  "ghost-rider-marvel-2028-release-date": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1500,
+    "sourceHeight": 1000
+  },
+  "god-of-war-bautista-kratos": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 2000,
+    "sourceHeight": 1125
+  },
+  "gta-6-cyberleek-leak-extortion-scheme": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 2560,
+    "sourceHeight": 1440
+  },
+  "gta6-everything-we-know": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "gta6-jason-duval": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
+  },
+  "gta6-locations": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "gta6-lucia-caminos": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
+  },
+  "gta6-supporting-characters": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "gta6-trailer-2-breakdown": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
+  },
+  "gundam-rogue-orbit-trailer-breakdown": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "harry-potter-hbo-new-trailer-september-2": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
+  },
+  "hayden-panettiere-dies-at-36": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1242,
+    "sourceHeight": 1887
+  },
+  "hbo-max-japan-prime-video-hulu-launch": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 675
+  },
+  "hotd-dragons-alive": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "hotd-s3-finale-review": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "housemarque-ilari-kuittinen-leaves-sami-hakala-successor": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 675
+  },
+  "how-long-is-fable-game-length": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 1024,
+    "sourceHeight": 576
+  },
+  "how-to-lose-a-guy-in-10-days-sequel-paramount-kate-hudson": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 1600
+  },
+  "insidious-out-of-the-further-ending-explained": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 1072,
+    "sourceHeight": 1590
+  },
+  "insidious-out-of-the-further-everything-we-know": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1400,
+    "sourceHeight": 2100
   },
   "insidious-out-of-the-further-review": {
     "widths": [
@@ -80,14 +532,906 @@
     "sourceWidth": 1600,
     "sourceHeight": 1067
   },
-  "x-men-97-explained": {
+  "insidious-timeline-explained-out-of-the-further": {
     "widths": [
       480,
       768,
       1200
     ],
-    "sourceWidth": 3840,
-    "sourceHeight": 1280
+    "sourceWidth": 1400,
+    "sourceHeight": 2100
+  },
+  "it-welcome-to-derry-season-2-renewed-1935-bradley-gang": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 4050,
+    "sourceHeight": 6000
+  },
+  "john-stewart-explained-green-lantern": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 675
+  },
+  "kill-jackie-trailer-catherine-zeta-jones": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 1024,
+    "sourceHeight": 682
+  },
+  "kingdom-hearts-4-coco-2027": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
+  },
+  "kingdom-hearts-4-everything-we-know": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
+  },
+  "kingdom-hearts-iv-quadratum-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1920,
+    "sourceHeight": 1080
+  },
+  "kit-harington-gilderoy-lockhart-harry-potter-season-2-recast": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 1067
+  },
+  "konami-press-start-2026-silent-hill-townfall-castlevania": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 630
+  },
+  "lanterns-episode-3-outkast-reaction": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 800
+  },
+  "lanterns-everything-you-need-to-know": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 899
+  },
+  "lanterns-hbo-max-ratings-premiere-viewership": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 2400,
+    "sourceHeight": 3000
+  },
+  "lanterns-hbo-watch-guide-dcu-viewing-order": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 899
+  },
+  "lanterns-premiere-reviews": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
+  },
+  "last-photograph-tiff-world-premiere": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 1000,
+    "sourceHeight": 1500
+  },
+  "league-of-extraordinary-gentlemen-2003-retrospective": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 2560,
+    "sourceHeight": 1440
+  },
+  "lincoln-in-the-bardo-movie-everything-we-know": {
+    "widths": [
+      480
+    ],
+    "sourceWidth": 635,
+    "sourceHeight": 1024
+  },
+  "madoka-magica-walpurgisnacht-rising-box-office": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 630
+  },
+  "madripoor-explained-wolverine-marvel": {
+    "widths": [
+      480
+    ],
+    "sourceWidth": 700,
+    "sourceHeight": 1056
+  },
+  "mafia-3-review-2026": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "manifest-spinoff-arrivals-netflix-series-order": {
+    "widths": [
+      480
+    ],
+    "sourceWidth": 495,
+    "sourceHeight": 279
+  },
+  "marvel-midnight-universe-spider-man-x-men-fantastic-four-breakdown": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 879,
+    "sourceHeight": 450
+  },
+  "marvels-wolverine-d23-trailer": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1920,
+    "sourceHeight": 1080
+  },
+  "marvels-wolverine-gone-gold-ps5-release": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
+  },
+  "marvels-wolverine-ps5-release-date-gameplay-guide": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1920,
+    "sourceHeight": 1080
+  },
+  "medalist-movie-release-date-story-trailer": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 630
+  },
+  "meghan-markle-dropped-the-gentlemen-guy-ritchie": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "metal-gear-solid-4-finally-free-from-ps3-master-collection-vol-2": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1920,
+    "sourceHeight": 1080
+  },
+  "mister-sinister-explained": {
+    "widths": [
+      480
+    ],
+    "sourceWidth": 550,
+    "sourceHeight": 805
+  },
+  "mobland-season-2-september-18": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1920,
+    "sourceHeight": 1080
+  },
+  "modern-warfare-4-beta-gameplay-changes-patch-notes": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1920,
+    "sourceHeight": 1080
+  },
+  "mutiny-jason-statham-prime-video-leak": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
+  },
+  "national-treasure-3-update-jon-turteltaub-script-nicolas-cage": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 2048,
+    "sourceHeight": 878
+  },
+  "noah-jupe-avengers-secret-wars-mystery-role": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 762
+  },
+  "one-piece-film-god-valley-baad-announced": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 678
+  },
+  "one-ring-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1400,
+    "sourceHeight": 788
+  },
+  "optimus-prime-awakening-peter-cullen-final-performance": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 1080,
+    "sourceHeight": 1080
+  },
+  "oscars-sci-tech-2026-investigations": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "outer-banks-season-5-release-date": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 865,
+    "sourceHeight": 560
+  },
+  "owens-family-curse-explained-practical-magic": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 630
+  },
+  "people-v-gorilla-grodd-hbo-max": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 1080,
+    "sourceHeight": 1080
+  },
+  "persona-4-revival-release-date-prime-time-gameplay": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 900,
+    "sourceHeight": 506
+  },
+  "peter-petrelli-explained-heroes": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1982,
+    "sourceHeight": 1317
+  },
+  "phantom-blade-zero-state-of-play-difficulty-weapons": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 1020,
+    "sourceHeight": 574
+  },
+  "phoenix-five-explained-cyclops-marvel-tokon": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1400,
+    "sourceHeight": 788
+  },
+  "pokemon-tcg-pocket-dual-type-cards-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
+  },
+  "pokemon-wild-card-2027-anime-movie": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 630
+  },
+  "rainbow-six-tactics-revealed-single-player-strategy-game": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 960,
+    "sourceHeight": 540
+  },
+  "reacher-season-4-neagley-spin-off": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1320,
+    "sourceHeight": 743
+  },
+  "resident-evil-2026-movie-game-connections": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1400,
+    "sourceHeight": 788
+  },
+  "ridley-scott-alien-covenant-sequel-david-michael-fassbender": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "rings-of-power-review-seasons-1-2": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1400,
+    "sourceHeight": 788
+  },
+  "rockstar-responds-gta-6-gameplay-leaks-extended-look": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1920,
+    "sourceHeight": 1080
+  },
+  "rupert-grint-returning-ron-weasley-harry-potter-cursed-child": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 1558
+  },
+  "ryan-gosling-flintstones-live-action-bamm-bamm-movie": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 675
+  },
+  "scooby-doo-origins-andre-3000-cathy-moriarty-cast": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "shadow-has-fallen-season-3-filming-iwan-rheon": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "silo-1-algorithm-safeguard-directive-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1400,
+    "sourceHeight": 2100
+  },
+  "silo-season-3-ending-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1920,
+    "sourceHeight": 1080
+  },
+  "silo-season-3-shift-book-differences": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1920,
+    "sourceHeight": 1080
+  },
+  "silo-season-4-everything-we-know": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1920,
+    "sourceHeight": 1080
+  },
+  "silo-timeline-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1920,
+    "sourceHeight": 1080
+  },
+  "skeletons-brie-larson-wraps-filming-victoria": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 2048,
+    "sourceHeight": 1365
+  },
+  "sony-playstation-digital-license-lawsuit": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1400,
+    "sourceHeight": 735
+  },
+  "spider-man-brand-new-day-2-billion": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 1080,
+    "sourceHeight": 1350
+  },
+  "spider-man-brand-new-day-700-million-box-office": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 670
+  },
+  "spider-man-brand-new-day-comics-reading-guide": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 900,
+    "sourceHeight": 1384
+  },
+  "spider-man-brand-new-day-endgame-force-awakens-box-office": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1400,
+    "sourceHeight": 2074
+  },
+  "spider-man-brand-new-day-insidious-box-office-august-2026": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1400,
+    "sourceHeight": 2074
+  },
+  "star-wars-zero-company-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
+  },
+  "starfighter-d23-footage": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1920,
+    "sourceHeight": 1080
+  },
+  "steamdb-acquired-nexus-mods-owner-chosen": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1920,
+    "sourceHeight": 1080
+  },
+  "steamos-handhelds": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "stephen-king-crouch-end-prime-video-series": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 853
+  },
+  "stranded-deep-2-desert-river-reveal": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "stranger-things-upside-down-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 600
+  },
+  "street-fighter-2026-new-trailer": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 1000,
+    "sourceHeight": 1250
+  },
+  "supergirl-hbo-max-september-10-timeline": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1920,
+    "sourceHeight": 792
+  },
+  "superman-man-of-tomorrow-wraps-filming-2027": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 774,
+    "sourceHeight": 1024
+  },
+  "supernatural-review": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "sylar-explained-heroes": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 3017,
+    "sourceHeight": 1895
+  },
+  "the-batman-part-2-damaged-batmobile-set-photos": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 900,
+    "sourceHeight": 601
+  },
+  "the-further-explained-insidious-rules": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 1072,
+    "sourceHeight": 1590
+  },
+  "the-gentlemen-season-3-renewal-season-2-trailer": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 800
+  },
+  "the-nun-2018-review": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 1800
+  },
+  "the-odyssey-box-office-record-r-rated": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 3000,
+    "sourceHeight": 2000
+  },
+  "the-ritual-review": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 732
+  },
+  "tim-curry-tribute-remembering-career": {
+    "widths": [
+      480
+    ],
+    "sourceWidth": 516,
+    "sourceHeight": 737
+  },
+  "top-gear-officially-returning-bbc-hosts-unrevealed": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "troy-daniel-keene-silo-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1400,
+    "sourceHeight": 1225
+  },
+  "tulsa-king-season-4-october-16-premiere-teaser": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 1067
+  },
+  "universal-plus-unext-japan-launch": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1400,
+    "sourceHeight": 788
+  },
+  "until-dawn-2-january-28-2027-trailer": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "valak-conjuring-universe-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 630
+  },
+  "vampire-hunter-d-bloodlust-gkids-theatrical-return": {
+    "widths": [
+      480,
+      768
+    ],
+    "sourceWidth": 900,
+    "sourceHeight": 495
+  },
+  "vecna-explained-stranger-things": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 600
+  },
+  "vision-quest-comic-visionquest-series-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1560,
+    "sourceHeight": 876
+  },
+  "visionquest-guide": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1560,
+    "sourceHeight": 876
+  },
+  "visionquest-ultron": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 898
+  },
+  "weapon-x-explained-wolverine-adamantium-memories": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1400,
+    "sourceHeight": 788
+  },
+  "what-happened-to-heroes": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 2909,
+    "sourceHeight": 1269
+  },
+  "white-vision-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1200,
+    "sourceHeight": 700
+  },
+  "why-coyote-vs-acme-was-shelved": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
   },
   "witcher-3-remastered-release-date-songs-of-the-past": {
     "widths": [
@@ -98,13 +1442,67 @@
     "sourceWidth": 3840,
     "sourceHeight": 2160
   },
-  "marvels-wolverine-d23-trailer": {
+  "witcher-4-2028-release-window-cd-projekt-red-update": {
     "widths": [
       480,
       768,
       1200
     ],
-    "sourceWidth": 1920,
-    "sourceHeight": 1080
+    "sourceWidth": 1600,
+    "sourceHeight": 900
+  },
+  "worlds-finest-assassin-season-2-january-2027": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1400,
+    "sourceHeight": 1976
+  },
+  "x-men-97-characters-powers-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
+  },
+  "x-men-97-explained": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 3840,
+    "sourceHeight": 1280
+  },
+  "x-men-97-original-series-connection": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1280,
+    "sourceHeight": 720
+  },
+  "x-men-97-season-2-complete-season-3-status": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 3840,
+    "sourceHeight": 1280
+  },
+  "xbox-disc-to-digital-physical-games-digital-entitlement": {
+    "widths": [
+      480,
+      768,
+      1200
+    ],
+    "sourceWidth": 1600,
+    "sourceHeight": 900
   }
 }
