@@ -14,8 +14,9 @@ interface Props {
   franchiseBrowse?: BrowseItem[];
   sections?: CoverageSection[];
   noindex?: boolean;
+  jsonLd?: Record<string, unknown>;
 }
-const { title, description, articles, browse = [], browseTitle = 'Browse', franchiseBrowse = [], sections = [], noindex = false } = Astro.props;
+const { title, description, articles, browse = [], browseTitle = 'Browse', franchiseBrowse = [], sections = [], noindex = false, jsonLd } = Astro.props;
 const [lead, ...rest] = articles;
 // Articles may belong to several coverage types. Reserve the primary list first, then only render
 // a story in the first supplementary section where it appears.
@@ -27,7 +28,7 @@ const uniqueSections = sections.map((section) => {
 }).filter(section => section.articles.length > 0);
 ---
 <HubContext label={title} />
-<BaseLayout title={`${title} | Red Reactions`} description={description} {noindex}>
+<BaseLayout title={`${title} | Red Reactions`} description={description} {noindex} {jsonLd}>
   <section class="wrap py-10"><p class="eyebrow">Coverage</p><h1 class="display mt-2 text-5xl sm:text-6xl">{title}</h1><p class="mt-4 max-w-2xl text-muted">{description}</p></section>
 
   {browse.length > 0 && <section class="wrap pb-10">
