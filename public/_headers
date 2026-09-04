@@ -5,3 +5,10 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=(), usb=()
   Content-Security-Policy: frame-ancestors 'self'; object-src 'none'; base-uri 'self';
+
+# Article/site imagery is published once per URL and never silently swapped at the same path --
+# new images get new article/asset paths. Long-lived immutable caching is safe here and replaces
+# the platform default of a 4-hour must-revalidate, which was forcing needless conditional
+# requests for assets that effectively never change.
+/images/*
+  Cache-Control: public, max-age=31536000, immutable
