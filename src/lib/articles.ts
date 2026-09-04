@@ -25,3 +25,14 @@ export function genrePath(genre: string) { return `/genre/${genre}/`; }
 export function topicPath(topic: string) { return `/${topic === 'tv' ? 'tv' : topic}/`; }
 export function readingTime(body: string) { return Math.max(1, Math.ceil(body.split(/\s+/).length / 220)); }
 export function relatedTo(current: Article, all: Article[]) { return all.filter(a => a.id !== current.id).map(a => ({ a, score: (a.data.franchise && a.data.franchise === current.data.franchise ? 8 : 0) + a.data.tags.filter(t => current.data.tags.includes(t)).length * 3 + a.data.topics.filter(t => current.data.topics.includes(t)).length + (a.data.contentType === current.data.contentType ? 1 : 0) })).filter(x => x.score > 0).sort((x,y) => y.score - x.score).slice(0,4).map(x=>x.a); }
+
+// Chronological Previous/Next, scoped to keep navigation topically coherent: within the same
+// franchise when the article has one, otherwise within any shared topic. `all` is already
+// newest-first, so this preserves that order within the narrower scope.
+export function scopedNeighbors(current: Article, all: Article[]) {
+  const scope = current.data.franchise
+    ? all.filter(a => a.data.franchise === current.data.franchise)
+    : all.filter(a => a.data.topics.some(t => current.data.topics.includes(t)));
+  const i = scope.findIndex(a => a.id === current.id);
+  return { previous: scope[i + 1], next: scope[i - 1] };
+}

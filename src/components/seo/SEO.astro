@@ -5,7 +5,10 @@ const { title = site.name, description = site.description, image = site.defaultI
 const canonical = new URL(Astro.url.pathname, site.url).href;
 const imageUrl = new URL(image, site.url).href;
 const jsonLdSafe = jsonLd ? JSON.stringify(jsonLd).replace(/</g, '\\u003c') : undefined;
+// max-image-preview:large is required for Google Discover/Search to show a large image preview at
+// all; without it Google falls back to a small "standard" thumbnail regardless of source image size.
+const robotsDirectives = [noindex ? 'noindex' : 'index', 'follow', 'max-image-preview:large'].join(',');
 ---
 <title>{title}</title><meta name="description" content={description} /><link rel="canonical" href={canonical} />
-<meta name="robots" content={noindex ? 'noindex,follow' : 'index,follow'} /><meta property="og:type" content={type} /><meta property="og:site_name" content={site.name} /><meta property="og:title" content={title} /><meta property="og:description" content={description} /><meta property="og:url" content={canonical} /><meta property="og:image" content={imageUrl} /><meta name="twitter:card" content="summary_large_image" /><meta name="twitter:title" content={title} /><meta name="twitter:description" content={description} /><meta name="twitter:image" content={imageUrl} />
+<meta name="robots" content={robotsDirectives} /><meta property="og:type" content={type} /><meta property="og:site_name" content={site.name} /><meta property="og:title" content={title} /><meta property="og:description" content={description} /><meta property="og:url" content={canonical} /><meta property="og:image" content={imageUrl} /><meta name="twitter:card" content="summary_large_image" /><meta name="twitter:title" content={title} /><meta name="twitter:description" content={description} /><meta name="twitter:image" content={imageUrl} />
 {jsonLdSafe && <script is:inline type="application/ld+json" set:html={jsonLdSafe} />}

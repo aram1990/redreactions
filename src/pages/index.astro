@@ -2,9 +2,11 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ArticleCard from '../components/cards/ArticleCard.astro';
 import SectionHeading from '../components/ui/SectionHeading.astro';
+import BrowseCard from '../components/hub/BrowseCard.astro';
 import { getPublishedArticles, articlePath } from '../lib/articles';
 import { site } from '../config/site';
 import { isReview } from '../lib/reviews';
+import { groupByFranchise } from '../lib/taxonomy';
 
 const articles = await getPublishedArticles();
 const newsArticles = articles.filter(a => a.data.contentType === 'news');
@@ -23,6 +25,9 @@ const mustRead = articles.filter(a => a.data.featured || a.data.contentType === 
   .slice(0, 4);
 const byTopic = (topic: string) => articles.filter(a => a.data.topics.includes(topic as never));
 const universes = ['movies', 'tv', 'anime', 'gaming', 'comics'].map(topic => ({ topic, label: topic === 'tv' ? 'TV & Streaming' : `${topic.charAt(0).toUpperCase()}${topic.slice(1)}`, articles: byTopic(topic) })).filter(group => group.articles.length > 0);
+// Same stable, indexable-only selection Explore already uses (MIN_INDEXABLE + article-count sort),
+// so this never spotlights a thin or noindex franchise, and isn't skewed by a single busy news day.
+const topFranchises = groupByFranchise(articles).slice(0, 6);
 const ld = { '@context': 'https://schema.org', '@type': 'WebSite', name: site.name, url: site.url, description: site.description, publisher: { '@type': 'Organization', name: site.name } };
 ---
 <BaseLayout title={`${site.name} — ${site.tagline}`} description={site.description} jsonLd={ld}>
@@ -33,5 +38,6 @@ const ld = { '@context': 'https://schema.org', '@type': 'WebSite', name: site.na
   {mustRead.length > 0 && <section class="wrap py-8"><SectionHeading title="Featured & Must Read" /><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{mustRead.map(a => <ArticleCard article={a} headingLevel="h3" />)}</div></section>}
   {reviews.length > 0 && <section class="wrap py-8"><SectionHeading title="Reviews" href="/reviews/" /><div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{reviews.slice(0,3).map(a => <ArticleCard article={a} variant="review" headingLevel="h3" />)}</div></section>}
   {byType('trailer').length > 0 && <section class="wrap py-8"><SectionHeading title="Trailers" href="/trailers/" /><div class="grid gap-4 md:grid-cols-2">{byType('trailer').map(a => <ArticleCard article={a} variant="video" headingLevel="h3" />)}</div></section>}
+  {topFranchises.length > 0 && <section class="wrap py-8"><SectionHeading title="Explore by Franchise" href="/explore/" label="All franchises" /><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{topFranchises.map(({ label, path, articles: franchiseArticles }) => <BrowseCard label={label} href={path} count={franchiseArticles.length} />)}</div></section>}
   {universes.length > 0 && <section class="wrap py-8"><SectionHeading title="By Universe" /><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{universes.map(({ label, articles: topicArticles }) => <div class="card p-5"><p class="eyebrow">Universe</p><h3 class="display mt-3 text-2xl">{label}</h3><div class="mt-4 space-y-3">{topicArticles.slice(0,2).map(a => <a class="block text-sm font-bold" href={articlePath(a)}>{a.data.title}</a>)}</div></div>)}</div></section>}
 </BaseLayout>
