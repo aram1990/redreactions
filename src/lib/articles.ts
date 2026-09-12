@@ -1,9 +1,18 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { getAuthorProfile } from '../config/authors';
 export type Article = CollectionEntry<'articles'>;
+// "Published" means both draft !== true AND publishedAt has actually arrived — a real timestamp
+// comparison (not a YYYY-MM-DD string compare), so same-day future-scheduled articles are excluded
+// too. This is the single source of truth for what's publicly visible: every listing/route/feed
+// goes through getPublishedArticles() (or isPublished() directly), so a future-dated article is
+// excluded everywhere at once, including its own static route via getStaticPaths in
+// pages/articles/[slug].astro. Since this site builds statically, an article becomes reachable
+// only once a build runs at or after its publishedAt — not automatically the instant the clock
+// passes it.
+export function isPublished(article: Article, now: Date = new Date()) { return !article.data.draft && article.data.publishedAt.valueOf() <= now.valueOf(); }
 // Sorted newest-first by publishedAt. Full ISO timestamps preserve the real order of articles
 // published on the same calendar day; date-only values remain valid for older content.
-export async function getPublishedArticles() { return (await getCollection('articles', ({ data }) => !data.draft)).sort((a,b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf()); }
+export async function getPublishedArticles() { return (await getCollection('articles', (article) => isPublished(article))).sort((a,b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf()); }
 export function articleSlug(article: Article) { return (article.data.slug || article.id).replace(/\.mdx$/, ''); }
 export function articlePath(article: Article) { return `/articles/${articleSlug(article)}/`; }
 export function tagSlug(tag: string) { return tag.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
