@@ -6,8 +6,10 @@ import BrowseCard from '../components/hub/BrowseCard.astro';
 import HubContext from '../components/nav/HubContext.astro';
 import type { Article } from '../lib/articles';
 
+import { articlePath } from '../lib/articles';
 interface BrowseItem { label: string; href: string; count: number; }
 interface CoverageSection { label: string; href?: string; articles: Article[]; }
+interface HubContent { intro: string; whereToStart?: Article; readingOrder: Article[]; }
 interface Props {
   title: string; description: string; articles: Article[];
   browse?: BrowseItem[]; browseTitle?: string;
@@ -15,8 +17,9 @@ interface Props {
   sections?: CoverageSection[];
   noindex?: boolean;
   jsonLd?: Record<string, unknown>;
+  hub?: HubContent;
 }
-const { title, description, articles, browse = [], browseTitle = 'Browse', franchiseBrowse = [], sections = [], noindex = false, jsonLd } = Astro.props;
+const { title, description, articles, browse = [], browseTitle = 'Browse', franchiseBrowse = [], sections = [], noindex = false, jsonLd, hub } = Astro.props;
 const [lead, ...rest] = articles;
 // Articles may belong to several coverage types. Reserve the primary list first, then only render
 // a story in the first supplementary section where it appears.
@@ -30,6 +33,23 @@ const uniqueSections = sections.map((section) => {
 <HubContext label={title} />
 <BaseLayout title={`${title} | Red Reactions`} description={description} {noindex} {jsonLd}>
   <section class="wrap py-10"><p class="eyebrow">Coverage</p><h1 class="display mt-2 text-5xl sm:text-6xl">{title}</h1><p class="mt-4 max-w-2xl text-muted">{description}</p></section>
+
+  {hub && <section class="wrap pb-10 grid gap-6 md:grid-cols-[2fr_1fr]">
+    <div>
+      <SectionHeading title={`What ${title} Is`} />
+      <p class="text-muted leading-relaxed">{hub.intro}</p>
+      {hub.whereToStart && <p class="mt-4">
+        <span class="font-bold">New here? </span>Start with{' '}
+        <a class="text-red font-bold hover:underline" href={articlePath(hub.whereToStart)}>{hub.whereToStart.data.title}</a>.
+      </p>}
+    </div>
+    {hub.readingOrder.length > 0 && <div>
+      <SectionHeading title="Reading Order" />
+      <ol class="space-y-2 list-decimal list-inside text-sm">
+        {hub.readingOrder.map(a => <li><a class="hover:underline hover:text-red" href={articlePath(a)}>{a.data.title}</a></li>)}
+      </ol>
+    </div>}
+  </section>}
 
   {browse.length > 0 && <section class="wrap pb-10">
     <SectionHeading title={browseTitle} />
