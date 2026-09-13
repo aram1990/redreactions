@@ -1,7 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ArticleCard from '../../components/cards/ArticleCard.astro';
-import { authorDisplayName, authorProfile, authorSlug, getPublishedArticles, type Article } from '../../lib/articles';
+import { authorDisplayName, authorPath, authorProfile, authorSlug, getPublishedArticles, type Article } from '../../lib/articles';
+import { site } from '../../config/site';
 
 export async function getStaticPaths() {
   const articles = await getPublishedArticles();
@@ -13,8 +14,19 @@ export async function getStaticPaths() {
 
 const { author, articles } = Astro.props as { author: string; articles: Article[] };
 const profile = authorProfile(author);
+const authorUrl = new URL(authorPath(author), site.url).href;
+// Person schema, built only from real profile fields already on file — no invented credentials/links.
+const jsonLd = profile ? {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: profile.name,
+  url: authorUrl,
+  jobTitle: profile.role,
+  description: profile.bio,
+  worksFor: { '@type': 'Organization', name: site.name, url: site.url },
+} : undefined;
 ---
-<BaseLayout title={`${author} | Red Reactions`} description={`Articles by ${author} at Red Reactions.`}>
+<BaseLayout title={`${author} | Red Reactions`} description={`Articles by ${author} at Red Reactions.`} {jsonLd}>
   <section class="wrap py-12 md:py-16">
     <p class="eyebrow">Our Writers</p>
     <h1 class="display mt-2 text-5xl sm:text-6xl">{author}</h1>
