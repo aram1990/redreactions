@@ -36,3 +36,24 @@ Only report an article as PUBLISHED once all of the following are true:
 - Social preview metadata/og:image verified when applicable.
 
 Anything short of this is in-progress work, not a published article — report it as such.
+
+
+## Permanent Real Editorial Image Rule
+
+Red Reactions must not use AI-generated editorial images, synthetic screenshots, fake stills, or generic generated illustrations unless the user explicitly requests one for a specific article.
+
+For every new article or material article update, use a genuinely relevant real image. Preferred sources, in order:
+
+1. Official studio/network/publisher/developer press or media assets.
+2. Official product, newsroom, support, announcement, trailer, or property pages.
+3. Genuine screenshots or stills from the exact subject where editorial use is appropriate.
+4. Wikimedia Commons with a verified compatible license and accurate attribution.
+5. Other clearly licensed editorial-use sources already approved by the repository.
+
+Rules:
+- Never generate an image merely because a real one is harder to find.
+- Never invent a person, product, scene, UI, poster, key art, or event photo.
+- Verify the image really depicts the article subject.
+- Record accurate alt text and credit/license information.
+- If no suitable real image exists, stop and report the image gap rather than silently creating synthetic artwork.
+- Before publication, inspect hero image metadata and reject AI-generated or synthetic editorial imagery unless the user explicitly approved it for that article.
